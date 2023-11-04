@@ -54,7 +54,7 @@ func OpenJupiterPage() *rod.Page {
 }
 
 // Fetch all Jupiter data for a student
-func FetchData(name string, pwd string) (courseList []model.Course, assignmentsList [][]model.Assignment, err error) {
+func FetchData(name string, pwd string) (courseList []model.Course, assignmentsList [][]*model.Assignment, err error) {
 	// Get a page to access Jupiter
 	page := OpenJupiterPage()
 	defer pagePool.Put(page)
