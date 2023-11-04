@@ -24,7 +24,7 @@ func main() {
 
 	// Create gin-engine and base router-group
 	server := gin.Default()
-	r := server.Group("/api")
+	r := server.Group("/api", (&middleware.AppAuthMiddleware{}).Authenticate)
 
 	// PING API
 	r.GET("/ping", func(ctx *gin.Context) {
@@ -39,7 +39,7 @@ func main() {
 	router.AuthRoutes(r, db)
 
 	// Data APIs
-	dataGroup := r.Group("/data", (&middleware.AppAuthMiddleware{}).Authenticate) // TODO: Add Auth Middleware
+	dataGroup := r.Group("/data")
 	dataController := controller.NewDataController(service.NewDataService(db))
 	{
 		dataGroup.POST("jupiter", dataController.JupiterData)
