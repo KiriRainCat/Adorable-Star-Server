@@ -1,0 +1,10 @@
+# Vscode
+.vscode/**
+!.vscode/settings.json
+
+# Sensitive Files
+dev.db
+constant.go
+
+# Other
+*.exe
