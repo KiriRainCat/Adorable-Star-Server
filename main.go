@@ -17,14 +17,17 @@ import (
 )
 
 func main() {
-	// Init necessary deps
+	// Init crawler and DB deps
 	crawler.Init()
 	db, _ := gorm.Open(sqlite.Open("./dev.db"), &gorm.Config{NamingStrategy: schema.NamingStrategy{SingularTable: true}})
 	db.AutoMigrate(&model.User{}, &model.Assignment{}, &model.Message{})
 
+	// Init middleware deps
+	authMiddleware := &middleware.AuthMiddleware{}
+
 	// Create gin-engine and base router-group
 	server := gin.Default()
-	r := server.Group("/api", (&middleware.AppAuthMiddleware{}).Authenticate)
+	r := server.Group("/api", authMiddleware.Authenticate)
 
 	// PING API
 	r.GET("/ping", func(ctx *gin.Context) {
@@ -36,7 +39,7 @@ func main() {
 	})
 
 	// Register API Routes
-	router.AuthRoutes(r, db)
+	router.AuthRoutes(r, db, authMiddleware)
 
 	// Data APIs
 	dataGroup := r.Group("/data")

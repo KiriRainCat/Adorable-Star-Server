@@ -105,7 +105,6 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 
 func (c *AuthController) Register(ctx *gin.Context) {
 	type json struct {
-		Admin    string `json:"admin" binding:"required"`
 		Email    string `json:"email" binding:"required"`
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
