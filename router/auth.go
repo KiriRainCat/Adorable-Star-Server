@@ -3,20 +3,19 @@ package router
 import (
 	"adorable-star/controller"
 	"adorable-star/middleware"
-	"adorable-star/service"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func AuthRoutes(r *gin.RouterGroup, db *gorm.DB, m *middleware.AuthMiddleware) {
+func AuthRoutes(r *gin.RouterGroup) {
 	g := r.Group("/auth")
 
 	// Deps
-	authController := controller.NewAuthController(service.NewUserService(db))
+	c := controller.Auth
+	m := middleware.Auth
 
 	// Routes
-	g.POST("/login", authController.Login)
-	g.POST("/logout", authController.Logout)
-	g.POST("/register", m.AuthenticateAdmin, authController.Register)
+	g.POST("/login", c.Login)
+	g.POST("/logout", c.Logout)
+	g.POST("/register", m.AuthenticateAdmin, c.Register)
 }

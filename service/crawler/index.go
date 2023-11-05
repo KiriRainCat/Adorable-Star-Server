@@ -9,15 +9,15 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 )
 
+var d = dao.Jupiter
 var browser *rod.Browser
 var pagePool rod.PagePool
 var pageCreate func() *rod.Page
-var d *dao.JupiterDAO
 
 var TaskPool []func(...any) any
 
 // Initialize crawler with page pool to execute tasks asynchronously
-func Init(jupiterDao *dao.JupiterDAO) {
+func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
 		u := launcher.New().Bin("/bin/chromium-browser").
@@ -43,9 +43,6 @@ func Init(jupiterDao *dao.JupiterDAO) {
 		return browser.MustIncognito().MustPage()
 	}
 	pagePool.Put(pagePool.Get(pageCreate).MustNavigate("https://login.jupitered.com/login/"))
-
-	// Get dao deps
-	d = jupiterDao
 }
 
 // Open a webpage for Jupiter
@@ -93,7 +90,8 @@ func FetchData(uid int) (courseList []model.Course, assignmentsList [][]*model.A
 	}
 
 	// Fetch GPA and report card image
-	FetchReportAndGPA(page)
+	gpa := FetchReportAndGPA(page)
+	println(gpa)
 
 	return
 }
@@ -104,13 +102,11 @@ func FetchAssignmentsDesc(page *rod.Page, ids []int) error {
 }
 
 // Fetch a student's GPA and report card image
-func FetchReportAndGPA(page *rod.Page) error {
+func FetchReportAndGPA(page *rod.Page) string {
 	// Navigate to report card page
 	opts, _ := NavGetOptions(page)
 	NavNavigate(page, opts[5])
 
 	// Get GPA and report card image
-	GetReportCardAndGPA(page, 1)
-
-	return nil
+	return GetReportCardAndGPA(page, 1)
 }

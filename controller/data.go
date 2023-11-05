@@ -9,12 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var Data = &DataController{service.Data}
+
 type DataController struct {
 	s *service.DataService
-}
-
-func NewDataController(s *service.DataService) *DataController {
-	return &DataController{s}
 }
 
 func (c *DataController) JupiterData(ctx *gin.Context) {

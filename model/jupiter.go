@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type JupiterData struct {
 	ID            int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
@@ -30,10 +34,9 @@ type Assignment struct {
 	Score  string    `json:"score,omitempty"`
 }
 
-func (o *Course) ToString() string {
-	return o.Title + " [" + o.PercentGrade + " " + o.LetterGrade + "]"
-}
-
-func (o *Assignment) ToString() string {
-	return "[" + o.From + "]" + " " + o.Due.Format("2006-01-02") + " " + o.Title + " " + o.Score
+func (o *Course) BeforeUpdate(db *gorm.DB) error {
+	if db.Statement.Changed("PercentGrade") || db.Statement.Changed("LetterGrade") {
+		println(o.Title + " has a change in grade")
+	}
+	return nil
 }

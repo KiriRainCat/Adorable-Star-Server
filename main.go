@@ -5,36 +5,24 @@ import (
 	"adorable-star/controller"
 	"adorable-star/dao"
 	"adorable-star/middleware"
-	"adorable-star/model"
 	"adorable-star/router"
-	"adorable-star/service"
 	"adorable-star/service/crawler"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/glebarez/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 )
 
 func main() {
-	//* ----------------------- Dependency Initialization ---------------------- *//
-	// Init database
-	db, _ := gorm.Open(sqlite.Open("./dev.db"), &gorm.Config{NamingStrategy: schema.NamingStrategy{SingularTable: true}})
-	db.AutoMigrate(&model.User{}, &model.JupiterData{}, &model.Assignment{}, &model.Message{})
+	// Init DB and deps
+	dao.Init()
+	authMiddleware := middleware.Auth
 
-	// Init DAOs
-	jupiterDao := dao.NewJupiterDAO(db)
-
-	// Init middlewares
-	authMiddleware := &middleware.AuthMiddleware{}
-
-	// Init crawler
-	crawler.Init(jupiterDao)
+	// Launch crawler
+	crawler.Init()
 
 	// Create gin-engine and base router-group
 	server := gin.Default()
-	r := server.Group("/api", authMiddleware.Authenticate)
+	r := server.Group("/api", authMiddleware.Authenticate, authMiddleware.AuthenticateUser)
 
 	//* --------------------------- API Registration --------------------------- *//
 	// PING API
@@ -47,11 +35,11 @@ func main() {
 	})
 
 	// Register API Routes
-	router.AuthRoutes(r, db, authMiddleware)
+	router.AuthRoutes(r)
 
 	// Data APIs
 	dataGroup := r.Group("/data")
-	dataController := controller.NewDataController(service.NewDataService(db))
+	dataController := controller.Data
 	{
 		dataGroup.POST("jupiter", authMiddleware.AuthenticateAdmin, dataController.JupiterData)
 	}

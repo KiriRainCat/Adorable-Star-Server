@@ -74,10 +74,9 @@ func GetAssignmentDesc(page *rod.Page) string {
 }
 
 // Use the current page of report card to crawl GPA and report card image
-func GetReportCardAndGPA(page *rod.Page, uid int) {
+func GetReportCardAndGPA(page *rod.Page, uid int) string {
 	// Get newest GPA
 	gpa := page.MustElement("tr.blue.topbotline td:last-child").MustText()
-	println(gpa)
 
 	// Take a screenshot of the report card section
 	byte, err := page.MustElement("table.bord").Screenshot(proto.PageCaptureScreenshotFormatPng, 0)
@@ -86,17 +85,13 @@ func GetReportCardAndGPA(page *rod.Page, uid int) {
 	}
 
 	// Save the image
-	img, _, err := image.Decode(bytes.NewReader(byte))
-	if err != nil {
-		print(err)
-	}
-	out, err := os.Create("./images/reports/" + strconv.Itoa(uid) + ".png")
-	if err != nil {
-		print(err)
-	}
+	img, _, _ := image.Decode(bytes.NewReader(byte))
+	out, _ := os.Create("./images/reports/" + strconv.Itoa(uid) + ".png")
 	defer out.Close()
 
 	w := bufio.NewWriter(out)
 	png.Encode(w, img)
 	w.Flush()
+
+	return gpa
 }
