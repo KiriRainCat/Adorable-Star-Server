@@ -26,7 +26,7 @@ func (*JupiterDAO) GetCoursesByUID(uid int) (courses []*model.Course, err error)
 }
 
 func (*JupiterDAO) GetAssignmentsByCourseAndUID(uid int, courseTitle string) (assignments []*model.Assignment, err error) {
-	err = DB.Find(&assignments, "uid = ? AND from = ?", uid, courseTitle).Error
+	err = DB.Find(&assignments, "uid = ? AND `from` = ?", uid, courseTitle).Error
 	return
 }
 

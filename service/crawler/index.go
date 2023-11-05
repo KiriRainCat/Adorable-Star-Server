@@ -111,16 +111,25 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 
 	// Check if course already exist in stored course list
 	for idx, course := range courseList {
+		var same = false
 		for _, storedCourse := range storedCourses {
 			// Use update instead of create new course when found same course
 			if storedCourse.Title == course.Title {
+				// When both courses are completely equivalent
+				if storedCourse.LetterGrade == course.LetterGrade && storedCourse.PercentGrade == course.PercentGrade {
+					same = true
+					break
+				}
+
 				course.ID = storedCourse.ID
 				break
 			}
 		}
 
 		// Insert or update course
-		d.PutCourse(course)
+		if !same {
+			d.PutCourse(course)
+		}
 
 		// Asynchronously store assignments data
 		wg.Add(1)
@@ -141,6 +150,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	return nil
 }
 
+// Store all fetched assignments data to database
 func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) error {
 	wg := &sync.WaitGroup{}
 
@@ -155,9 +165,16 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 
 	// Check if assignment already exist in stored assignment list
 	for _, assignment := range assignments {
+		var same = false
 		for _, storedAssignment := range storedAssignments {
+			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due {
-				// Use update instead of create new assignment when found same assignment
+				// When both courses are completely equivalent
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Desc && storedAssignment.Status == assignment.Status {
+					same = true
+					break
+				}
+
 				assignment.ID = storedAssignment.ID
 				break
 			}
@@ -167,8 +184,10 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		if assignment.ID == 0 {
 			newAssignments = append(newAssignments, assignment)
 		} else {
-			// Update assignment
-			d.PutAssignment(assignment)
+			// Update assignment when there's difference
+			if !same {
+				d.PutAssignment(assignment)
+			}
 		}
 
 		// Too much new assignments, store them directly without description

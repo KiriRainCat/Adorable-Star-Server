@@ -11,7 +11,7 @@ type JupiterData struct {
 	UID         int       `json:"uid,omitempty"`
 	Account     string    `json:"account,omitempty"`
 	Password    string    `json:"password,omitempty"`
-	GPA         float32   `json:"gpa,omitempty"`
+	GPA         string    `json:"gpa,omitempty"`
 	FetchedTime time.Time `json:"fetched_time,omitempty"`
 }
 
