@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"adorable-star/service"
 	"adorable-star/service/crawler"
 	"net/http"
 	"strconv"
@@ -9,14 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var Data = &DataController{service.Data}
+var Data = &DataController{}
 
-type DataController struct {
-	s *service.DataService
-}
+type DataController struct{}
 
 func (c *DataController) JupiterData(ctx *gin.Context) {
-	// TODO: Change test codes into production code
 	uid, _ := strconv.Atoi(ctx.Query("uid"))
 
 	// Crawl data asynchronously
