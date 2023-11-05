@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"adorable-star/dao"
 	"adorable-star/model"
 
 	"github.com/gin-gonic/gin"
@@ -11,10 +12,12 @@ import (
 var browser *rod.Browser
 var pagePool rod.PagePool
 var pageCreate func() *rod.Page
+var d *dao.JupiterDAO
+
 var TaskPool []func(...any) any
 
 // Initialize crawler with page pool to execute tasks asynchronously
-func Init() {
+func Init(jupiterDao *dao.JupiterDAO) {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
 		u := launcher.New().Bin("/bin/chromium-browser").
@@ -40,6 +43,9 @@ func Init() {
 		return browser.MustIncognito().MustPage()
 	}
 	pagePool.Put(pagePool.Get(pageCreate).MustNavigate("https://login.jupitered.com/login/"))
+
+	// Get dao deps
+	d = jupiterDao
 }
 
 // Open a webpage for Jupiter
@@ -54,13 +60,16 @@ func OpenJupiterPage() *rod.Page {
 }
 
 // Fetch all Jupiter data for a student
-func FetchData(name string, pwd string) (courseList []model.Course, assignmentsList [][]*model.Assignment, err error) {
+func FetchData(uid int) (courseList []model.Course, assignmentsList [][]*model.Assignment, err error) {
 	// Get a page to access Jupiter
 	page := OpenJupiterPage()
 	defer pagePool.Put(page)
 
+	// Find user's Jupiter account info
+	data, _ := d.GetDataByUID(uid)
+
 	// Login
-	err = Login(page, name, pwd)
+	err = Login(page, data.Account, data.Password)
 	if err != nil {
 		return
 	}
@@ -83,9 +92,25 @@ func FetchData(name string, pwd string) (courseList []model.Course, assignmentsL
 		assignmentsList = append(assignmentsList, GetCourseAssignments(page, courseName))
 	}
 
+	// Fetch GPA and report card image
+	FetchReportAndGPA(page)
+
 	return
 }
 
-func FetchAssignmentsDesc(ids []int) error {
+// Fetch multiple assignments' description
+func FetchAssignmentsDesc(page *rod.Page, ids []int) error {
+	return nil
+}
+
+// Fetch a student's GPA and report card image
+func FetchReportAndGPA(page *rod.Page) error {
+	// Navigate to report card page
+	opts, _ := NavGetOptions(page)
+	NavNavigate(page, opts[5])
+
+	// Get GPA and report card image
+	GetReportCardAndGPA(page, 1)
+
 	return nil
 }

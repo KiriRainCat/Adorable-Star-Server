@@ -8,8 +8,6 @@ type JupiterData struct {
 	Account       string    `json:"account,omitempty"`
 	Password      string    `json:"password,omitempty"`
 	GPA           float32   `json:"gpa,omitempty"`
-	Grades        string    `json:"grades,omitempty"`
-	ReportCard    string    `json:"report_card,omitempty"`
 	DataFetchedAt time.Time `json:"updated_at,omitempty"`
 }
 

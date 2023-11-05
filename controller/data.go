@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"adorable-star/model"
 	"adorable-star/service"
 	"adorable-star/service/crawler"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,11 +19,10 @@ func NewDataController(s *service.DataService) *DataController {
 
 func (c *DataController) JupiterData(ctx *gin.Context) {
 	// TODO: Change test codes into production code
-	var params model.JupiterData
-	ctx.ShouldBind(&params)
+	uid, _ := strconv.Atoi(ctx.Query("uid"))
 
 	// Crawl data asynchronously
-	go crawler.FetchData(params.Account, params.Password)
+	go crawler.FetchData(uid)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
