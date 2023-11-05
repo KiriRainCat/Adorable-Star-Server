@@ -3,11 +3,11 @@ package main
 import (
 	"adorable-star/config"
 	"adorable-star/controller"
-	"adorable-star/crawler"
 	"adorable-star/middleware"
 	"adorable-star/model"
 	"adorable-star/router"
 	"adorable-star/service"
+	"adorable-star/service/crawler"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

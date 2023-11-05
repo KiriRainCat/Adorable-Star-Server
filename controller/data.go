@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"adorable-star/crawler"
 	"adorable-star/model"
 	"adorable-star/service"
+	"adorable-star/service/crawler"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
