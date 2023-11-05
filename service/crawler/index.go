@@ -3,6 +3,7 @@ package crawler
 import (
 	"adorable-star/dao"
 	"adorable-star/model"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
@@ -57,7 +58,7 @@ func OpenJupiterPage() *rod.Page {
 }
 
 // Fetch all Jupiter data for a student
-func FetchData(uid int) (courseList []model.Course, assignmentsList [][]*model.Assignment, err error) {
+func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.Assignment, err error) {
 	// Get a page to access Jupiter
 	page := OpenJupiterPage()
 	defer pagePool.Put(page)
@@ -83,21 +84,120 @@ func FetchData(uid int) (courseList []model.Course, assignmentsList [][]*model.A
 		NavNavigate(page, courses[idx])
 
 		// Get grade
-		courseList = append(courseList, *GetCourseGrade(page, courseName))
+		courseList = append(courseList, GetCourseGrade(page, courseName, uid))
 
 		// Get all assignments
-		assignmentsList = append(assignmentsList, GetCourseAssignments(page, courseName))
+		assignmentsList = append(assignmentsList, GetCourseAssignments(page, courseName, uid))
 	}
 
 	// Fetch GPA and report card image
 	gpa := FetchReportAndGPA(page)
-	println(gpa)
+
+	// Store fetched data to database
+	err = StoreData(uid, gpa, courseList, assignmentsList)
 
 	return
 }
 
-// Fetch multiple assignments' description
-func FetchAssignmentsDesc(page *rod.Page, ids []int) error {
+// Store all fetched data to database
+func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment) error {
+	wg := &sync.WaitGroup{}
+
+	// Insert or update course grade / assignments
+	storedCourses, err := d.GetCoursesByUID(uid)
+	if err != nil {
+		return err
+	}
+
+	// Check if course already exist in stored course list
+	for idx, course := range courseList {
+		for _, storedCourse := range storedCourses {
+			// Use update instead of create new course when found same course
+			if storedCourse.Title == course.Title {
+				course.ID = storedCourse.ID
+				break
+			}
+		}
+
+		// Insert or update course
+		d.PutCourse(course)
+
+		// Asynchronously store assignments data
+		wg.Add(1)
+		courseTitle := course.Title
+		assignments := assignmentsList[idx]
+		go func() {
+			StoreAssignmentsData(uid, courseTitle, assignments)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	// Update fetch time and GPA
+	err = d.UpdateFetchTimeAndGPA(uid, gpa)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) error {
+	wg := &sync.WaitGroup{}
+
+	// Get stored assignment list
+	storedAssignments, err := d.GetAssignmentsByCourseAndUID(uid, courseTitle)
+	if err != nil {
+		return err
+	}
+
+	// List for new assignments
+	var newAssignments []*model.Assignment
+
+	// Check if assignment already exist in stored assignment list
+	for _, assignment := range assignments {
+		for _, storedAssignment := range storedAssignments {
+			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due {
+				// Use update instead of create new assignment when found same assignment
+				assignment.ID = storedAssignment.ID
+				break
+			}
+		}
+
+		// If assignment is new put it into tmp list
+		if assignment.ID == 0 {
+			newAssignments = append(newAssignments, assignment)
+		} else {
+			// Update assignment
+			d.PutAssignment(assignment)
+		}
+
+		// Too much new assignments, store them directly without description
+		if len(newAssignments) > 5 { // TODO: 数字暂时的，确定负载后再改
+			for _, assignment := range newAssignments {
+				err := d.PutAssignment(assignment)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		// Asynchronously fetch descriptions and store new assignments
+		for _, assignment := range newAssignments {
+			wg.Add(1)
+			assignmentC := assignment
+			go func() {
+				assignmentWithDesc, err := FetchAssignmentDesc(assignmentC)
+				if err != nil {
+					return
+				}
+				d.PutAssignment(assignmentWithDesc)
+				wg.Done()
+			}()
+		}
+	}
+
+	wg.Wait()
 	return nil
 }
 
@@ -109,4 +209,10 @@ func FetchReportAndGPA(page *rod.Page) string {
 
 	// Get GPA and report card image
 	return GetReportCardAndGPA(page, 1)
+}
+
+// Fetch assignment description
+func FetchAssignmentDesc(assignment *model.Assignment) (assignmentWithDesc *model.Assignment, err error) {
+	// TODO: Logic Implement
+	return assignment, nil
 }

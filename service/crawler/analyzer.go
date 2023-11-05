@@ -35,7 +35,7 @@ func FormatJupiterDueDate(raw string) string {
 }
 
 // Use the current page of course to crawl course grade
-func GetCourseGrade(page *rod.Page, courseName string) *model.Course {
+func GetCourseGrade(page *rod.Page, courseName string, uid int) *model.Course {
 	WaitStable(page)
 	el, err := page.Timeout(time.Millisecond * 100).Element("table > tbody > tr.baseline.botline.printblue")
 	if err != nil {
@@ -43,6 +43,7 @@ func GetCourseGrade(page *rod.Page, courseName string) *model.Course {
 	}
 
 	return &model.Course{
+		UID:          uid,
 		Title:        courseName,
 		LetterGrade:  el.MustElement(":nth-child(2)").MustText(),
 		PercentGrade: el.MustElement(":nth-child(3)").MustText(),
@@ -50,13 +51,14 @@ func GetCourseGrade(page *rod.Page, courseName string) *model.Course {
 }
 
 // Use the current page of course to crawl all assignments
-func GetCourseAssignments(page *rod.Page, courseName string) (assignments []*model.Assignment) {
+func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignments []*model.Assignment) {
 	// Get course assignments
 	data := page.MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
 	for _, assignment := range data {
 		due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(assignment.MustElement(":nth-child(2)").MustText()))
 		assignments = append(assignments,
 			&model.Assignment{
+				UID:   uid,
 				From:  courseName,
 				Due:   due,
 				Title: assignment.MustElement(":nth-child(3)").MustText(),

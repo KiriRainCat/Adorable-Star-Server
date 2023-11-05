@@ -7,12 +7,12 @@ import (
 )
 
 type JupiterData struct {
-	ID            int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
-	UID           int       `json:"uid,omitempty"`
-	Account       string    `json:"account,omitempty"`
-	Password      string    `json:"password,omitempty"`
-	GPA           float32   `json:"gpa,omitempty"`
-	DataFetchedAt time.Time `json:"updated_at,omitempty"`
+	ID          int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
+	UID         int       `json:"uid,omitempty"`
+	Account     string    `json:"account,omitempty"`
+	Password    string    `json:"password,omitempty"`
+	GPA         float32   `json:"gpa,omitempty"`
+	FetchedTime time.Time `json:"fetched_time,omitempty"`
 }
 
 type Course struct {
@@ -36,7 +36,12 @@ type Assignment struct {
 
 func (o *Course) BeforeUpdate(db *gorm.DB) error {
 	if db.Statement.Changed("PercentGrade") || db.Statement.Changed("LetterGrade") {
-		println(o.Title + " has a change in grade")
+		db.Create(&Message{
+			UID:  o.UID,
+			Type: 1,
+			From: o.Title,
+			Msg:  "新成绩: [" + o.PercentGrade + " " + o.LetterGrade + "]",
+		})
 	}
 	return nil
 }
