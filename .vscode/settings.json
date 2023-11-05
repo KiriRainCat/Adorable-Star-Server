@@ -14,5 +14,9 @@
     "tbody",
     "topbotline",
     "touchnavbtn"
-  ]
+  ],
+  "files.exclude": {
+    "images/**": true,
+    "*.exe": true
+  }
 }
