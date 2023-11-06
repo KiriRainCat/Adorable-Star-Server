@@ -31,15 +31,15 @@ func (*UserDAO) GetUserByUsernameOrEmail(name string) (*model.User, error) {
 
 func (*UserDAO) InsertUser(email string, username string, password string) error {
 	user := &model.User{
-		Email:      email,
-		Username:   username,
-		Password:   password,
-		ActiveTime: time.Now(),
+		Email:    email,
+		Username: username,
+		Password: password,
+		ActiveAt: time.Now(),
 	}
 	return DB.Create(user).Error
 }
 
 func (*UserDAO) UpdateActiveTime(id int) error {
 	// Using update column to avoid `updated_at`` change
-	return DB.Model(&model.User{ID: id}).UpdateColumn("active_time", time.Now()).Error
+	return DB.Model(&model.User{ID: id}).UpdateColumn("active_at", time.Now()).Error
 }

@@ -30,14 +30,24 @@ func (*JupiterDAO) GetAssignmentsByCourseAndUID(uid int, courseTitle string) (as
 	return
 }
 
-func (*JupiterDAO) PutCourse(course *model.Course) error {
-	return DB.Save(course).Error
+func (*JupiterDAO) InsertCourse(course *model.Course) error {
+	return DB.Create(course).Error
 }
 
-func (*JupiterDAO) PutAssignment(assignment *model.Assignment) error {
-	return DB.Save(assignment).Error
+func (*JupiterDAO) InsertAssignment(assignment *model.Assignment) error {
+	return DB.Create(assignment).Error
+}
+
+func (*JupiterDAO) UpdateCourse(course *model.Course) error {
+	// Select * to select all columns, because status update can use 0 {Default will not update for gorm}
+	return DB.Model(course).Select("*").Updates(course).Error
+}
+
+func (*JupiterDAO) UpdateAssignment(assignment *model.Assignment) error {
+	// Select * to select all columns, because status update can use 0 {Default will not update for gorm}
+	return DB.Model(assignment).Select("*").Updates(assignment).Error
 }
 
 func (*JupiterDAO) UpdateFetchTimeAndGPA(uid int, gpa string) error {
-	return DB.Model(&model.JupiterData{}).Where("uid = ?", uid).Updates(map[string]any{"gpa": gpa, "fetched_time": time.Now()}).Error
+	return DB.Model(&model.JupiterData{}).Where("uid = ?", uid).Updates(map[string]any{"gpa": gpa, "fetched_at": time.Now()}).Error
 }

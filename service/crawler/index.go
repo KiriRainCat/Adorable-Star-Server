@@ -103,7 +103,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment) error {
 	wg := &sync.WaitGroup{}
 
-	// Insert or update course grade / assignments
+	// Get stored course list
 	storedCourses, err := d.GetCoursesByUID(uid)
 	if err != nil {
 		return err
@@ -121,14 +121,18 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 					break
 				}
 
-				course.ID = storedCourse.ID
+				course.CopyFromOther(storedCourse)
 				break
 			}
 		}
 
 		// Insert or update course
 		if !same {
-			d.PutCourse(course)
+			if course.ID == 0 {
+				d.InsertCourse(course)
+			} else {
+				d.UpdateCourse(course)
+			}
 		}
 
 		// Asynchronously store assignments data
@@ -165,47 +169,46 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		var same = false
 		for _, storedAssignment := range storedAssignments {
 			// Use update instead of create new assignment when found same assignment
-			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due {
+			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due && storedAssignment.From == assignment.From {
 				// When both courses are completely equivalent
 				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
 					same = true
 				}
 
-				assignment.ID = storedAssignment.ID
+				assignment.CopyFromOther(storedAssignment)
 				break
 			}
 		}
 
-		// If assignment is new put it into tmp list
-		if assignment.ID == 0 {
-			newAssignments = append(newAssignments, assignment)
-		} else {
-			// Update assignment when there's difference
-			if !same {
-				d.PutAssignment(assignment)
+		// Insert or update assignment
+		if !same {
+			if assignment.ID == 0 {
+				// If assignment is new put it into tmp list
+				newAssignments = append(newAssignments, assignment)
+			} else {
+				d.UpdateAssignment(assignment)
 			}
 		}
+	}
 
-		// Too much new assignments, store them directly without description
-		if len(newAssignments) > 5 { // TODO: 数字暂时的，确定负载后再改
-			for _, assignment := range newAssignments {
-				d.PutAssignment(assignment)
-			}
+	// Too much new assignments, store them directly without description
+	if len(newAssignments) > 5 { // TODO: 数字暂时的，确定负载后再改
+		for _, assignment := range newAssignments {
+			d.InsertAssignment(assignment)
 		}
-
+	} else {
 		// Asynchronously fetch descriptions and store new assignments
 		for _, assignment := range newAssignments {
 			wg.Add(1)
 			assignmentC := assignment
 			go func() {
 				assignmentWithDesc := FetchAssignmentDesc(assignmentC)
-				d.PutAssignment(assignmentWithDesc)
+				d.InsertAssignment(assignmentWithDesc)
 				wg.Done()
 			}()
 		}
+		wg.Wait()
 	}
-
-	wg.Wait()
 }
 
 // Fetch a student's GPA and report card image
