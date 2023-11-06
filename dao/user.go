@@ -40,5 +40,6 @@ func (*UserDAO) InsertUser(email string, username string, password string) error
 }
 
 func (*UserDAO) UpdateActiveTime(id int) error {
-	return DB.Model(&model.User{ID: id}).Update("active_time", time.Now()).Error
+	// Using update column to avoid `updated_at`` change
+	return DB.Model(&model.User{ID: id}).UpdateColumn("active_time", time.Now()).Error
 }
