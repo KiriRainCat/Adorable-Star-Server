@@ -151,14 +151,11 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 }
 
 // Store all fetched assignments data to database
-func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) error {
+func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) {
 	wg := &sync.WaitGroup{}
 
 	// Get stored assignment list
-	storedAssignments, err := d.GetAssignmentsByCourseAndUID(uid, courseTitle)
-	if err != nil {
-		return err
-	}
+	storedAssignments, _ := d.GetAssignmentsByCourseAndUID(uid, courseTitle)
 
 	// List for new assignments
 	var newAssignments []*model.Assignment
@@ -193,12 +190,8 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		// Too much new assignments, store them directly without description
 		if len(newAssignments) > 5 { // TODO: 数字暂时的，确定负载后再改
 			for _, assignment := range newAssignments {
-				err := d.PutAssignment(assignment)
-				if err != nil {
-					return err
-				}
+				d.PutAssignment(assignment)
 			}
-			return nil
 		}
 
 		// Asynchronously fetch descriptions and store new assignments
@@ -206,10 +199,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			wg.Add(1)
 			assignmentC := assignment
 			go func() {
-				assignmentWithDesc, err := FetchAssignmentDesc(assignmentC)
-				if err != nil {
-					return
-				}
+				assignmentWithDesc := FetchAssignmentDesc(assignmentC)
 				d.PutAssignment(assignmentWithDesc)
 				wg.Done()
 			}()
@@ -217,7 +207,6 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	}
 
 	wg.Wait()
-	return nil
 }
 
 // Fetch a student's GPA and report card image
@@ -231,7 +220,7 @@ func FetchReportAndGPA(page *rod.Page) string {
 }
 
 // Fetch assignment description
-func FetchAssignmentDesc(assignment *model.Assignment) (assignmentWithDesc *model.Assignment, err error) {
+func FetchAssignmentDesc(assignment *model.Assignment) *model.Assignment {
 	// TODO: Logic Implement
-	return assignment, nil
+	return assignment
 }
