@@ -167,9 +167,8 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due {
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Desc && storedAssignment.Status == assignment.Status {
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
 					same = true
-					break
 				}
 
 				assignment.ID = storedAssignment.ID
