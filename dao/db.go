@@ -11,6 +11,9 @@ import (
 var DB *gorm.DB
 
 func Init() {
-	DB, _ = gorm.Open(sqlite.Open("./dev.db"), &gorm.Config{NamingStrategy: schema.NamingStrategy{SingularTable: true}})
+	DB, _ = gorm.Open(sqlite.Open("./dev.db"), &gorm.Config{
+		NamingStrategy:         schema.NamingStrategy{SingularTable: true},
+		SkipDefaultTransaction: true,
+	})
 	DB.AutoMigrate(&model.User{}, &model.JupiterData{}, &model.Course{}, &model.Assignment{}, &model.Message{})
 }
