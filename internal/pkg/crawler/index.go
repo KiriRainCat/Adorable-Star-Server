@@ -4,6 +4,7 @@ import (
 	"adorable-star/internal/dao"
 	"adorable-star/internal/model"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -81,7 +82,15 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	data, _ := d.GetDataByUID(uid)
 
 	// Login
-	if err = Login(page, data.Account, data.Password); err != nil {
+	if err = Login(page, data.Account, data.Password, uid); err != nil {
+		if strings.Contains(err.Error(), "cloudflare") {
+			dao.Message.Insert(&model.Message{
+				UID:  uid,
+				Type: -1,
+				From: "system",
+				Msg:  "cfToken",
+			})
+		}
 		return
 	}
 
