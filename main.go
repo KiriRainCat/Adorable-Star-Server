@@ -2,11 +2,11 @@ package main
 
 import (
 	"adorable-star/config"
-	"adorable-star/controller"
-	"adorable-star/dao"
-	"adorable-star/middleware"
+	"adorable-star/internal/controller"
+	"adorable-star/internal/dao"
+	"adorable-star/internal/middleware"
+	"adorable-star/internal/pkg/crawler"
 	"adorable-star/router"
-	"adorable-star/service/crawler"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"adorable-star/service/crawler"
+	"adorable-star/internal/pkg/crawler"
 	"net/http"
 	"strconv"
 

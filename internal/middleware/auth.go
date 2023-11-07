@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"adorable-star/config"
-	"adorable-star/service"
+	"adorable-star/internal/service"
 	"net/http"
 	"strings"
 

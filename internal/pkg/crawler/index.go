@@ -1,8 +1,8 @@
 package crawler
 
 import (
-	"adorable-star/dao"
-	"adorable-star/model"
+	"adorable-star/internal/dao"
+	"adorable-star/internal/model"
 	"log"
 	"sync"
 

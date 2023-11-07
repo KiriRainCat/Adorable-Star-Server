@@ -1,8 +1,8 @@
 package router
 
 import (
-	"adorable-star/controller"
-	"adorable-star/middleware"
+	"adorable-star/internal/controller"
+	"adorable-star/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

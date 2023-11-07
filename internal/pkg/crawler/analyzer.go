@@ -1,7 +1,7 @@
 package crawler
 
 import (
-	"adorable-star/model"
+	"adorable-star/internal/model"
 	"bufio"
 	"bytes"
 	"image"

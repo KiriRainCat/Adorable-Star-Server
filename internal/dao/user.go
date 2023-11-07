@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"adorable-star/model"
+	"adorable-star/internal/model"
 	"time"
 )
 

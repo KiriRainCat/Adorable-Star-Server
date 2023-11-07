@@ -1,6 +1,6 @@
 package dao
 
-import "adorable-star/model"
+import "adorable-star/internal/model"
 
 type MessageDAO struct{}
 

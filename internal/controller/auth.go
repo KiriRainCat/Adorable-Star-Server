@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"adorable-star/service"
+	"adorable-star/internal/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

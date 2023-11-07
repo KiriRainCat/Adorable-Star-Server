@@ -2,7 +2,7 @@ package service
 
 import (
 	"adorable-star/config"
-	"adorable-star/dao"
+	"adorable-star/internal/dao"
 	"errors"
 	"strings"
 
