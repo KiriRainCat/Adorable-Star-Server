@@ -87,8 +87,18 @@ func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignmen
 }
 
 // Get description for an assignment
-func GetAssignmentDesc(page *rod.Page) (desc string, err error) {
-	return "", nil
+func GetAssignmentDesc(page *rod.Page) string {
+	WaitStable(page)
+
+	var desc string
+	err := rod.Try(func() {
+		desc = page.Timeout(time.Second * 2).MustElement("#mainpage >div:nth-child(6) > div").MustText()
+	})
+	if err != nil {
+		return ""
+	}
+
+	return strings.Replace(desc, "Directions\n", "", 1)
 }
 
 // Use the current page of report card to crawl GPA and report card image

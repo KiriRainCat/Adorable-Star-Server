@@ -4,6 +4,7 @@ import (
 	"adorable-star/internal/dao"
 	"adorable-star/internal/model"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -182,7 +183,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	}
 	wg.Wait()
 	if count != 0 {
-		log.Printf("(Jupiter Data Crawling): [%v] DB Actions Done for User [%v]\n", count, uid)
+		log.Printf("INFO [%v] DB Actions Done for User [%v]\n", count, uid)
 	}
 
 	// Update fetch time and GPA
@@ -241,7 +242,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			wg.Add(1)
 			assignmentC := assignment
 			go func() {
-				assignmentWithDesc := FetchAssignmentDesc(assignmentC)
+				assignmentWithDesc := FetchAssignmentDesc(uid, assignmentC)
 				d.InsertAssignment(assignmentWithDesc)
 				wg.Done()
 			}()
@@ -268,7 +269,66 @@ func FetchReportAndGPA(page *rod.Page) string {
 }
 
 // Fetch assignment description
-func FetchAssignmentDesc(assignment *model.Assignment) *model.Assignment {
-	// TODO: Logic Implement
+func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignment {
+	// Get a page to access Jupiter
+	page := OpenJupiterPage()
+	defer pagePool.Put(page)
+
+	// Find user's Jupiter account info
+	data, _ := d.GetDataByUID(uid)
+
+	// Login
+	if err := Login(page, data.Account, data.Password, uid); err != nil {
+		if strings.Contains(err.Error(), "cloudflare") {
+			dao.Message.Insert(&model.Message{
+				UID:  uid,
+				Type: -1,
+				From: "system",
+				Msg:  "cfToken",
+			})
+		}
+		return assignment
+	}
+
+	// Get courses from nav bar
+	_, courses, err := NavGetOptions(page)
+	if err != nil {
+		return assignment
+	}
+
+	// Navigate to the course the assignment is located
+	for _, course := range courses {
+		if course.MustText() == assignment.From {
+			err = NavNavigate(page, course)
+			if err != nil {
+				return assignment
+			}
+			break
+		}
+	}
+
+	// Get course assignments
+	WaitStable(page)
+	var elements rod.Elements
+	err = rod.Try(func() {
+		elements = page.Timeout(time.Second * 2).MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
+	})
+	if err != nil {
+		return assignment
+	}
+
+	// Find and click the targeted assignment
+	for _, el := range elements {
+		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
+		if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && strings.Contains(el.MustElement(":nth-child(2)").MustText(), due) {
+			el.MustClick()
+			break
+		}
+	}
+
+	// Get assignment desc
+	desc := GetAssignmentDesc(page)
+	assignment.Desc = desc
+
 	return assignment
 }

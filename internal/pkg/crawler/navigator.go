@@ -24,7 +24,7 @@ func Login(page *rod.Page, name string, pwd string, uid int) error {
 		page.Timeout(time.Second * 2).MustElement("#text_school1").MustInput("Georgia School Ningbo")
 		page.Timeout(time.Second * 2).MustElement("#text_city1").MustInput("Ningbo")
 		page.Timeout(time.Second * 2).MustElement("#showcity > div.menuspace").MustClick()
-		WaitStable(page.Timeout(time.Second * 2))
+		WaitStable(page)
 		page.Timeout(time.Second * 2).MustElement("#menulist_region1 > div[val='xx_xx']").MustClick()
 
 		// Enter user account for login
@@ -32,6 +32,7 @@ func Login(page *rod.Page, name string, pwd string, uid int) error {
 		page.Timeout(time.Second * 2).MustElement("#text_password1").MustInput(pwd)
 
 		page.Timeout(time.Second * 2).MustElement("#loginbtn").MustClick()
+		WaitStable(page, 800)
 	})
 	if err != nil {
 		return err
@@ -43,7 +44,6 @@ func Login(page *rod.Page, name string, pwd string, uid int) error {
 	}
 
 	// Select the newest school year
-	WaitStable(page.Timeout(time.Second*2), 800)
 	err = rod.Try(func() {
 		page.Timeout(time.Second * 2).MustElement("#schoolyeartab").MustClick()
 		page.Timeout(time.Second * 2).MustElement("#schoolyearlist > div:nth-child(1)").MustClick()
@@ -52,7 +52,7 @@ func Login(page *rod.Page, name string, pwd string, uid int) error {
 		return err
 	}
 
-	WaitStable(page.Timeout(time.Second * 2))
+	WaitStable(page)
 	return nil
 }
 
@@ -70,8 +70,9 @@ func NavGetOptions(page *rod.Page) (opts rod.Elements, courses rod.Elements, err
 // Navigate to designated target on the nav bar
 func NavNavigate(page *rod.Page, target *rod.Element) error {
 	WaitStable(page, 800)
-	return rod.Try(func() {
+	err := rod.Try(func() {
 		target.Timeout(time.Second * 2).MustClick()
-		WaitStable(page)
 	})
+	WaitStable(page)
+	return err
 }
