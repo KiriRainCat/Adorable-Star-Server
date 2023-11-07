@@ -3,6 +3,7 @@ package crawler
 import (
 	"adorable-star/dao"
 	"adorable-star/model"
+	"log"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -101,6 +102,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 
 // Store all fetched data to database
 func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment) error {
+	var count = 0
 	wg := &sync.WaitGroup{}
 
 	// Get stored course list
@@ -112,6 +114,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	// Check if course already exist in stored course list
 	for idx, course := range courseList {
 		var same = false
+		var old *model.Course
 		for _, storedCourse := range storedCourses {
 			// Use update instead of create new course when found same course
 			if storedCourse.Title == course.Title {
@@ -121,6 +124,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 					break
 				}
 
+				old = storedCourse
 				course.CopyFromOther(storedCourse)
 				break
 			}
@@ -128,10 +132,11 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 
 		// Insert or update course
 		if !same {
+			count++
 			if course.ID == 0 {
 				d.InsertCourse(course)
 			} else {
-				d.UpdateCourse(course)
+				d.UpdateCourse(old, course)
 			}
 		}
 
@@ -140,11 +145,14 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 		courseTitle := course.Title
 		assignments := assignmentsList[idx]
 		go func() {
-			StoreAssignmentsData(uid, courseTitle, assignments)
+			count += StoreAssignmentsData(uid, courseTitle, assignments)
 			wg.Done()
 		}()
 	}
 	wg.Wait()
+	if count != 0 {
+		log.Printf("[%v] DB Actions Done for User [%v] when Fetching Jupiter Data\n", count, uid)
+	}
 
 	// Update fetch time and GPA
 	err = d.UpdateFetchTimeAndGPA(uid, gpa)
@@ -155,7 +163,8 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 }
 
 // Store all fetched assignments data to database
-func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) {
+func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) int {
+	var count = 0
 	wg := &sync.WaitGroup{}
 
 	// Get stored assignment list
@@ -167,6 +176,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	// Check if assignment already exist in stored assignment list
 	for _, assignment := range assignments {
 		var same = false
+		var old *model.Assignment
 		for _, storedAssignment := range storedAssignments {
 			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due && storedAssignment.From == assignment.From {
@@ -175,6 +185,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 					same = true
 				}
 
+				old = storedAssignment
 				assignment.CopyFromOther(storedAssignment)
 				break
 			}
@@ -182,11 +193,12 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 
 		// Insert or update assignment
 		if !same {
+			count++
 			if assignment.ID == 0 {
 				// If assignment is new put it into tmp list
 				newAssignments = append(newAssignments, assignment)
 			} else {
-				d.UpdateAssignment(assignment)
+				d.UpdateAssignment(old, assignment)
 			}
 		}
 	}
@@ -209,6 +221,8 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		}
 		wg.Wait()
 	}
+
+	return count
 }
 
 // Fetch a student's GPA and report card image

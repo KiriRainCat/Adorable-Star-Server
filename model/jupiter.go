@@ -81,14 +81,23 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 	}
 }
 
-func (o *Course) BeforeUpdate(db *gorm.DB) (err error) {
-	if db.Statement.Changed("PercentGrade") || db.Statement.Changed("LetterGrade") {
-		db.Create(&Message{
-			UID:  o.UID,
-			Type: 1,
-			From: o.Title,
-			Msg:  "新成绩: [" + o.PercentGrade + " " + o.LetterGrade + "]",
-		})
+func (o *Course) BeforeUpdate(tx *gorm.DB) error {
+	if tx.Statement.Changed("PercentGrade", "LetterGrade") {
+		// Store the old data
+		oldPercentGrade := o.PercentGrade
+		oldLetterGrade := o.LetterGrade
+		go func() {
+			// Wait for course to be updated
+			time.Sleep(time.Second * 6)
+
+			// Insert new message to database
+			tx.Create(&Message{
+				UID:  o.UID,
+				Type: 1,
+				From: o.Title,
+				Msg:  "[" + oldPercentGrade + " " + oldLetterGrade + "] → [" + o.PercentGrade + " " + o.LetterGrade + "]",
+			})
+		}()
 	}
 	return nil
 }

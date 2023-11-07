@@ -38,14 +38,14 @@ func (*JupiterDAO) InsertAssignment(assignment *model.Assignment) error {
 	return DB.Create(assignment).Error
 }
 
-func (*JupiterDAO) UpdateCourse(course *model.Course) error {
+func (*JupiterDAO) UpdateCourse(old *model.Course, course *model.Course) error {
 	// Select * to select all columns, because status update can use 0 {Default will not update for gorm}
-	return DB.Model(course).Select("*").Updates(course).Error
+	return DB.Model(old).Select("*").Updates(course).Error
 }
 
-func (*JupiterDAO) UpdateAssignment(assignment *model.Assignment) error {
+func (*JupiterDAO) UpdateAssignment(old *model.Assignment, assignment *model.Assignment) error {
 	// Select * to select all columns, because status update can use 0 {Default will not update for gorm}
-	return DB.Model(assignment).Select("*").Updates(assignment).Error
+	return DB.Model(old).Select("*").Updates(assignment).Error
 }
 
 func (*JupiterDAO) UpdateFetchTimeAndGPA(uid int, gpa string) error {
