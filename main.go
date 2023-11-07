@@ -22,7 +22,9 @@ func main() {
 
 	// Create gin-engine and base router-group
 	server := gin.Default()
-	r := server.Group("/api", authMiddleware.Authenticate, authMiddleware.AuthenticateUser)
+	r := server.Group("/api")
+	r.Use(authMiddleware.Authenticate).
+		Use(authMiddleware.AuthenticateUser)
 
 	//* --------------------------- API Registration --------------------------- *//
 	// PING API
