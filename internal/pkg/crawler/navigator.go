@@ -1,7 +1,6 @@
 package crawler
 
 import (
-	"errors"
 	"time"
 
 	"github.com/go-rod/rod"
@@ -20,42 +19,52 @@ func WaitStable(page *rod.Page, ms_optional ...int) {
 func Login(page *rod.Page, name string, pwd string) error {
 	err := rod.Try(func() {
 		// Enter basic school info
-		page.MustElement("#text_school1").MustInput("Georgia School Ningbo")
-		page.MustElement("#text_city1").MustInput("Ningbo")
-		page.MustElement("#showcity > div.menuspace").MustClick()
-		WaitStable(page)
-		page.MustElement("#menulist_region1 > div[val='xx_xx']").MustClick()
+		page.Timeout(time.Second * 2).MustElement("#text_school1").MustInput("Georgia School Ningbo")
+		page.Timeout(time.Second * 2).MustElement("#text_city1").MustInput("Ningbo")
+		page.Timeout(time.Second * 2).MustElement("#showcity > div.menuspace").MustClick()
+		WaitStable(page.Timeout(time.Second * 2))
+		page.Timeout(time.Second * 2).MustElement("#menulist_region1 > div[val='xx_xx']").MustClick()
 
 		// Enter user account for login
-		page.MustElement("#text_studid1").MustInput(name)
-		page.MustElement("#text_password1").MustInput(pwd)
+		page.Timeout(time.Second * 2).MustElement("#text_studid1").MustInput(name)
+		page.Timeout(time.Second * 2).MustElement("#text_password1").MustInput(pwd)
 
-		page.MustElement("#loginbtn").MustClick()
+		page.Timeout(time.Second * 2).MustElement("#loginbtn").MustClick()
 	})
 	if err != nil {
-		return errors.New("登录 Jupiter 时发生未知异常: " + err.Error())
+		return err
 	}
 
 	// Select the newest school year
-	WaitStable(page, 800)
-	page.MustElement("#schoolyeartab").MustClick()
-	page.MustElement("#schoolyearlist > div:nth-child(1)").MustClick()
+	WaitStable(page.Timeout(time.Second*2), 800)
+	err = rod.Try(func() {
+		page.Timeout(time.Second * 2).MustElement("#schoolyeartab").MustClick()
+		page.Timeout(time.Second * 2).MustElement("#schoolyearlist > div:nth-child(1)").MustClick()
+	})
+	if err != nil {
+		return err
+	}
 
-	WaitStable(page)
+	WaitStable(page.Timeout(time.Second * 2))
 	return nil
 }
 
 // Get all options from the nav bar
-func NavGetOptions(page *rod.Page) (opts rod.Elements, courses rod.Elements) {
+func NavGetOptions(page *rod.Page) (opts rod.Elements, courses rod.Elements, err error) {
 	WaitStable(page)
-	page.MustElement("#touchnavbtn").MustClick()
-	opts, courses = page.MustElements("#sidebar > div[val]"), page.MustElements("#sidebar > div[click*='grades']")
+	err = rod.Try(func() {
+		page.Timeout(time.Second * 2).MustElement("#touchnavbtn").MustClick()
+		opts = page.Timeout(time.Second * 2).MustElements("#sidebar > div[val]")
+		courses = page.Timeout(time.Second * 2).MustElements("#sidebar > div[click*='grades']")
+	})
 	return
 }
 
 // Navigate to designated target on the nav bar
-func NavNavigate(page *rod.Page, target *rod.Element) {
+func NavNavigate(page *rod.Page, target *rod.Element) error {
 	WaitStable(page, 800)
-	target.MustClick()
-	WaitStable(page)
+	return rod.Try(func() {
+		target.Timeout(time.Second * 2).MustClick()
+		WaitStable(page)
+	})
 }

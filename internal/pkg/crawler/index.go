@@ -5,6 +5,7 @@ import (
 	"adorable-star/internal/model"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
@@ -47,6 +48,18 @@ func Init() {
 	pagePool.Put(pagePool.Get(pageCreate).MustNavigate("https://login.jupitered.com/login/"))
 }
 
+// Composite function for fetch and store data from Jupiter
+func CrawlerJob(uid int) {
+	// Fetch all data
+	courseList, assignmentsList, gpa, err := FetchData(uid)
+	if err != nil {
+		return
+	}
+
+	// Store fetched data to database
+	StoreData(uid, gpa, courseList, assignmentsList)
+}
+
 // Open a webpage for Jupiter
 func OpenJupiterPage() *rod.Page {
 	// Navigate to Jupiter Ed login page
@@ -59,7 +72,7 @@ func OpenJupiterPage() *rod.Page {
 }
 
 // Fetch all Jupiter data for a student
-func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.Assignment, err error) {
+func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.Assignment, gpa string, err error) {
 	// Get a page to access Jupiter
 	page := OpenJupiterPage()
 	defer pagePool.Put(page)
@@ -68,21 +81,33 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	data, _ := d.GetDataByUID(uid)
 
 	// Login
-	err = Login(page, data.Account, data.Password)
-	if err != nil {
+	if err = Login(page, data.Account, data.Password); err != nil {
 		return
 	}
 
 	// Get courses from nav bar
-	_, courses := NavGetOptions(page)
-	page.MustElement("#touchnavbtn").MustClick()
+	_, courses, err := NavGetOptions(page)
+	if err != nil {
+		return
+	}
+	if rod.Try(func() { page.MustElement("#touchnavbtn").MustClick() }) != nil {
+		return
+	}
 
 	// Navigate through all of the courses to fetch course data
 	for idx := range courses {
 		// Nav bar navigation to course page
-		_, courses := NavGetOptions(page)
-		courseName := courses[idx].MustText()
-		NavNavigate(page, courses[idx])
+		_, courses, err := NavGetOptions(page)
+		if err != nil {
+			continue
+		}
+		var courseName string
+		if rod.Try(func() { courseName = courses[idx].Timeout(time.Second * 2).MustText() }) != nil {
+			continue
+		}
+		if NavNavigate(page, courses[idx]) != nil {
+			continue
+		}
 
 		// Get grade
 		courseList = append(courseList, GetCourseGrade(page, courseName, uid))
@@ -92,23 +117,20 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	}
 
 	// Fetch GPA and report card image
-	gpa := FetchReportAndGPA(page)
-
-	// Store fetched data to database
-	err = StoreData(uid, gpa, courseList, assignmentsList)
+	gpa = FetchReportAndGPA(page)
 
 	return
 }
 
 // Store all fetched data to database
-func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment) error {
+func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment) {
 	var count = 0
 	wg := &sync.WaitGroup{}
 
 	// Get stored course list
 	storedCourses, err := d.GetCoursesByUID(uid)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Check if course already exist in stored course list
@@ -151,15 +173,11 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	}
 	wg.Wait()
 	if count != 0 {
-		log.Printf("[%v] DB Actions Done for User [%v] when Fetching Jupiter Data\n", count, uid)
+		log.Printf("(Jupiter Data Crawling): [%v] DB Actions Done for User [%v]\n", count, uid)
 	}
 
 	// Update fetch time and GPA
-	err = d.UpdateFetchTimeAndGPA(uid, gpa)
-	if err != nil {
-		return err
-	}
-	return nil
+	d.UpdateFetchTimeAndGPA(uid, gpa)
 }
 
 // Store all fetched assignments data to database
@@ -228,8 +246,13 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 // Fetch a student's GPA and report card image
 func FetchReportAndGPA(page *rod.Page) string {
 	// Navigate to report card page
-	opts, _ := NavGetOptions(page)
-	NavNavigate(page, opts[5])
+	opts, _, err := NavGetOptions(page)
+	if err != nil {
+		return ""
+	}
+	if NavNavigate(page, opts[5]) != nil {
+		return ""
+	}
 
 	// Get GPA and report card image
 	return GetReportCardAndGPA(page, 1)

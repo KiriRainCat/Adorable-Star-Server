@@ -16,7 +16,7 @@ func (c *DataController) JupiterData(ctx *gin.Context) {
 	uid, _ := strconv.Atoi(ctx.Query("uid"))
 
 	// Crawl data asynchronously
-	go crawler.FetchData(uid)
+	go crawler.CrawlerJob(uid)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,

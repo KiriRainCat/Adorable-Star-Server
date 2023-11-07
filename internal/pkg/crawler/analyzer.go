@@ -53,38 +53,56 @@ func GetCourseGrade(page *rod.Page, courseName string, uid int) *model.Course {
 // Use the current page of course to crawl all assignments
 func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignments []*model.Assignment) {
 	// Get course assignments
-	data := page.MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
-	for _, assignment := range data {
-		due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(assignment.MustElement(":nth-child(2)").MustText()))
-		assignments = append(assignments,
-			&model.Assignment{
+	var data rod.Elements
+	err := rod.Try(func() {
+		data = page.Timeout(time.Second * 2).MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
+	})
+	if err != nil {
+		return
+	}
+
+	// Get information about each assignment
+	for _, el := range data {
+		var assignment *model.Assignment
+
+		// Prevent dead lock
+		err := rod.Try(func() {
+			due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(el.Timeout(time.Second*2).MustElement(":nth-child(2)").MustText()))
+			assignment = &model.Assignment{
 				UID:   uid,
 				From:  courseName,
 				Due:   due,
-				Title: assignment.MustElement(":nth-child(3)").MustText(),
-				Score: assignment.MustElement(":nth-child(4)").MustText(),
-			},
-		)
+				Title: el.Timeout(time.Second * 2).MustElement(":nth-child(3)").MustText(),
+				Score: el.Timeout(time.Second * 2).MustElement(":nth-child(4)").MustText(),
+			}
+		})
+
+		// Only add assignment when no error occurred
+		if err == nil {
+			assignments = append(assignments, assignment)
+		}
 	}
 
 	return
 }
 
 // Get description for an assignment
-func GetAssignmentDesc(page *rod.Page) string {
-	return ""
+func GetAssignmentDesc(page *rod.Page) (desc string, err error) {
+	return "", nil
 }
 
 // Use the current page of report card to crawl GPA and report card image
-func GetReportCardAndGPA(page *rod.Page, uid int) string {
+func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
 	// Get newest GPA
-	gpa := page.MustElement("tr.blue.topbotline td:last-child").MustText()
+	err := rod.Try(func() {
+		gpa = page.Timeout(time.Second * 2).MustElement("tr.blue.topbotline td:last-child").MustText()
+	})
+	if err != nil {
+		return ""
+	}
 
 	// Take a screenshot of the report card section
-	byte, err := page.MustElement("table.bord").Screenshot(proto.PageCaptureScreenshotFormatPng, 0)
-	if err != nil {
-		print(err)
-	}
+	byte, _ := page.MustElement("table.bord").Screenshot(proto.PageCaptureScreenshotFormatPng, 0)
 
 	// Save the image
 	img, _, _ := image.Decode(bytes.NewReader(byte))
@@ -95,5 +113,5 @@ func GetReportCardAndGPA(page *rod.Page, uid int) string {
 	png.Encode(w, img)
 	w.Flush()
 
-	return gpa
+	return
 }
