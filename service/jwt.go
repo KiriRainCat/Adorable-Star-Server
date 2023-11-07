@@ -56,7 +56,6 @@ func (s *TokenService) VerifyToken(token string) error {
 
 	// Bind to claims
 	if claims, ok := t.Claims.(*tokenClaims); ok {
-		// TODO: dig 依赖注入
 		// Check if uid matches decoded info
 		user, err := dao.User.GetUserByID(claims.UID)
 		if err != nil || user.Status != claims.Status || user.Email != claims.Email {
