@@ -20,6 +20,7 @@ func WaitStable(page *rod.Page, ms_optional ...int) {
 // Use user provided account info to log into Jupiter
 func Login(page *rod.Page, name string, pwd string, uid int) error {
 	err := rod.Try(func() {
+		WaitStable(page)
 		// Enter basic school info
 		page.Timeout(time.Second * 2).MustElement("#text_school1").MustInput("Georgia School Ningbo")
 		page.Timeout(time.Second * 2).MustElement("#text_city1").MustInput("Ningbo")

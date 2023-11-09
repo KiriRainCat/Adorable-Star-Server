@@ -68,7 +68,7 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 	if o.From == "" {
 		o.From = other.From
 	}
-	if (o.Due == time.Time{}) {
+	if o.Due.Year() == (time.Time{}.Year()) {
 		o.Due = other.Due
 	}
 	if o.Title == "" {
@@ -93,10 +93,11 @@ func (o *Course) BeforeUpdate(tx *gorm.DB) error {
 
 			// Insert new message to database
 			tx.Create(&Message{
-				UID:  o.UID,
-				Type: 2,
-				From: o.ID,
-				Msg:  percentGrade + " " + letterGrade + "|" + o.PercentGrade + " " + o.LetterGrade,
+				UID:    o.UID,
+				Type:   2,
+				From:   o.ID,
+				Course: o.Title,
+				Msg:    percentGrade + " " + letterGrade + "|" + o.PercentGrade + " " + o.LetterGrade,
 			})
 		}()
 	}
@@ -112,13 +113,16 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 			time.Sleep(time.Second * 6)
 
 			// Insert new message to database
+			date := "Future"
+			if o.Due.Year() != 1 {
+				date = strconv.Itoa(int(due.Month())) + "/" + strconv.Itoa(due.Day())
+			}
 			tx.Create(&Message{
-				UID:  o.UID,
-				Type: 1,
-				From: o.ID,
-				Msg: "Due|" +
-					strconv.Itoa(int(due.Month())) + "/" + strconv.Itoa(due.Day()) + "|" +
-					strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()),
+				UID:    o.UID,
+				Type:   1,
+				From:   o.ID,
+				Course: o.From,
+				Msg:    "Due|" + date + "|" + strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()),
 			})
 		}()
 	}
@@ -132,10 +136,11 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 
 			// Insert new message to database
 			tx.Create(&Message{
-				UID:  o.UID,
-				Type: 1,
-				From: o.ID,
-				Msg:  "Score|" + score + "|" + o.Score,
+				UID:    o.UID,
+				Type:   1,
+				From:   o.ID,
+				Course: o.From,
+				Msg:    "Score|" + score + "|" + o.Score,
 			})
 		}()
 	}
@@ -149,17 +154,18 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 
 			// Insert new message to database
 			tx.Create(&Message{
-				UID:  o.UID,
-				Type: 1,
-				From: o.ID,
-				Msg:  "Desc|" + desc + "|" + o.Desc,
+				UID:    o.UID,
+				Type:   1,
+				From:   o.ID,
+				Course: o.From,
+				Msg:    "Desc|" + desc + "|" + o.Desc,
 			})
 		}()
 	}
 	return nil
 }
 
-func (o *Assignment) BeforeCreate(tx *gorm.DB) error {
+func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 	// Check whether user is new user
 	var data *JupiterData
 	if tx.Where("uid = ?", o.UID).First(&data).Error != nil {
@@ -170,11 +176,16 @@ func (o *Assignment) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	// Insert new message to database
+	due := "Future"
+	if o.Due.Year() != 1 {
+		due = strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day())
+	}
 	tx.Create(&Message{
-		UID:  o.UID,
-		Type: 0,
-		From: o.ID,
-		Msg:  strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()) + "|" + o.Title,
+		UID:    o.UID,
+		Type:   0,
+		From:   o.ID,
+		Course: o.From,
+		Msg:    due + "|" + o.Title,
 	})
 	return nil
 }

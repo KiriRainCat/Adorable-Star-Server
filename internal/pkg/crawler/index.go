@@ -47,7 +47,7 @@ func Init() {
 	pageCreate = func() *rod.Page {
 		return browser.MustIncognito().MustPage()
 	}
-	pagePool.Put(pagePool.Get(pageCreate).MustNavigate("https://login.jupitered.com/login/"))
+	pagePool.Put(pagePool.Get(pageCreate))
 }
 
 // Composite function for fetch and store data from Jupiter
@@ -63,21 +63,28 @@ func CrawlerJob(uid int) {
 }
 
 // Open a webpage for Jupiter
-func OpenJupiterPage() *rod.Page {
+func OpenJupiterPage() (page *rod.Page, err error) {
 	// Navigate to Jupiter Ed login page
-	page := pagePool.Get(pageCreate).MustSetCookies().MustNavigate("https://login.jupitered.com/login/")
+	page = pagePool.Get(pageCreate).MustSetCookies()
+	err = page.Navigate("https://login.jupitered.com/login/")
+	if err != nil {
+		return
+	}
 
 	// Bypass Cloudflare detection for crawler
 	page.MustEvalOnNewDocument("const newProto = navigator.__proto__;delete newProto.webdriver;navigator.__proto__ = newProto;")
 
-	return page
+	return
 }
 
 // Fetch all Jupiter data for a student
 func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.Assignment, gpa string, err error) {
 	// Get a page to access Jupiter
-	page := OpenJupiterPage()
+	page, err := OpenJupiterPage()
 	defer pagePool.Put(page)
+	if err != nil {
+		return
+	}
 
 	// Find user's Jupiter account info
 	data, _ := d.GetDataByUID(uid)
@@ -270,8 +277,11 @@ func FetchReportAndGPA(page *rod.Page) string {
 // Fetch assignment description
 func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignment {
 	// Get a page to access Jupiter
-	page := OpenJupiterPage()
+	page, err := OpenJupiterPage()
 	defer pagePool.Put(page)
+	if err != nil {
+		return assignment
+	}
 
 	// Find user's Jupiter account info
 	data, _ := d.GetDataByUID(uid)
@@ -318,7 +328,7 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	// Find and click the targeted assignment
 	for _, el := range elements {
 		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
-		if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && strings.Contains(el.MustElement(":nth-child(2)").MustText(), due) {
+		if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
 			el.MustClick()
 			break
 		}
