@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 )
 
 var d = dao.Jupiter
@@ -25,19 +24,11 @@ var TaskPool []func(...any) any
 func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
-		u := launcher.New().Bin("/bin/chromium-browser").
-			Set("--no-sandbox").
-			Set("--headless").
-			Set("--remote-debugging-port", "7999").
-			Set("--disable-gpu").
-			Set("--disable-dev-shm-usage").
-			Set("--disable-setuid-sandbox").
-			Set("--no-first-run").
-			Set("--no-zygote").
-			Set("--single-process").
-			MustLaunch()
-
+		u := "ws://127.0.0.1:7999/devtools/browser/351172ee-707a-4e17-962b-47674849c52a"
 		browser = rod.New().ControlURL(u).MustConnect()
+		for _, page := range browser.MustPages() {
+			page.MustClose()
+		}
 	} else {
 		browser = rod.New().NoDefaultDevice().MustConnect()
 	}
