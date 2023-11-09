@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"adorable-star/internal/global"
 	"adorable-star/internal/model"
 	"bufio"
 	"bytes"
@@ -116,7 +117,7 @@ func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
 
 	// Save the image
 	img, _, _ := image.Decode(bytes.NewReader(byte))
-	out, _ := os.Create("./images/reports/" + strconv.Itoa(uid) + ".png")
+	out, _ := os.Create(global.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
 	defer out.Close()
 
 	w := bufio.NewWriter(out)
