@@ -88,7 +88,6 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 			dao.Message.Insert(&model.Message{
 				UID:  uid,
 				Type: -1,
-				From: "system",
 				Msg:  "cfToken",
 			})
 		}
@@ -283,7 +282,6 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 			dao.Message.Insert(&model.Message{
 				UID:  uid,
 				Type: -1,
-				From: "system",
 				Msg:  "cfToken",
 			})
 		}

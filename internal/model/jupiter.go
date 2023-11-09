@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -83,9 +84,29 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 
 func (o *Course) BeforeUpdate(tx *gorm.DB) error {
 	if tx.Statement.Changed("PercentGrade", "LetterGrade") {
-		// Store the old data
-		oldPercentGrade := o.PercentGrade
-		oldLetterGrade := o.LetterGrade
+		percentGrade := o.PercentGrade
+		letterGrade := o.LetterGrade
+
+		go func() {
+			// Wait for course to be updated
+			time.Sleep(time.Second * 6)
+
+			// Insert new message to database
+			tx.Create(&Message{
+				UID:  o.UID,
+				Type: 2,
+				From: o.ID,
+				Msg:  percentGrade + " " + letterGrade + "|" + o.PercentGrade + " " + o.LetterGrade,
+			})
+		}()
+	}
+	return nil
+}
+
+func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
+	// If due date update
+	if tx.Statement.Changed("Due") {
+		due := o.Due
 		go func() {
 			// Wait for course to be updated
 			time.Sleep(time.Second * 6)
@@ -94,10 +115,66 @@ func (o *Course) BeforeUpdate(tx *gorm.DB) error {
 			tx.Create(&Message{
 				UID:  o.UID,
 				Type: 1,
-				From: o.Title,
-				Msg:  "[" + oldPercentGrade + " " + oldLetterGrade + "] → [" + o.PercentGrade + " " + o.LetterGrade + "]",
+				From: o.ID,
+				Msg: "Due|" +
+					strconv.Itoa(int(due.Month())) + "/" + strconv.Itoa(due.Day()) + "|" +
+					strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()),
 			})
 		}()
 	}
+
+	// If score update
+	if tx.Statement.Changed("Score") {
+		score := o.Score
+		go func() {
+			// Wait for course to be updated
+			time.Sleep(time.Second * 6)
+
+			// Insert new message to database
+			tx.Create(&Message{
+				UID:  o.UID,
+				Type: 1,
+				From: o.ID,
+				Msg:  "Score|" + score + "|" + o.Score,
+			})
+		}()
+	}
+
+	// If description update
+	if tx.Statement.Changed("Desc") {
+		desc := o.Desc
+		go func() {
+			// Wait for course to be updated
+			time.Sleep(time.Second * 6)
+
+			// Insert new message to database
+			tx.Create(&Message{
+				UID:  o.UID,
+				Type: 1,
+				From: o.ID,
+				Msg:  "Desc|" + desc + "|" + o.Desc,
+			})
+		}()
+	}
+	return nil
+}
+
+func (o *Assignment) BeforeCreate(tx *gorm.DB) error {
+	// Check whether user is new user
+	var data *JupiterData
+	if tx.Where("uid = ?", o.UID).First(&data).Error != nil {
+		return nil
+	}
+	if (data.FetchedAt == time.Time{}) {
+		return nil
+	}
+
+	// Insert new message to database
+	tx.Create(&Message{
+		UID:  o.UID,
+		Type: 0,
+		From: o.ID,
+		Msg:  strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()) + "|" + o.Title,
+	})
 	return nil
 }
