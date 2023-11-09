@@ -2,7 +2,6 @@ package main
 
 import (
 	"adorable-star/config"
-	"adorable-star/internal/controller"
 	"adorable-star/internal/dao"
 	"adorable-star/internal/middleware"
 	"adorable-star/internal/pkg/crawler"
@@ -38,13 +37,6 @@ func main() {
 
 	// Register API Routes
 	router.AuthRoutes(r)
-
-	// Data APIs
-	dataGroup := r.Group("/data")
-	dataController := controller.Data
-	{
-		dataGroup.POST("jupiter", authMiddleware.AuthenticateAdmin, dataController.JupiterData)
-	}
 
 	server.Run(config.PORT)
 }

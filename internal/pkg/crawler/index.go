@@ -48,18 +48,41 @@ func Init() {
 		return browser.MustIncognito().MustPage()
 	}
 	pagePool.Put(pagePool.Get(pageCreate))
+
+	// Start scheduled crawler job
+	go CrawlerJob()
+	t := time.NewTicker(time.Minute * 30)
+
+	// For every 30 minutes, fetch jupiter data for user
+	go func() {
+		for range t.C {
+			go CrawlerJob()
+		}
+	}()
 }
 
-// Composite function for fetch and store data from Jupiter
-func CrawlerJob(uid int) {
-	// Fetch all data
-	courseList, assignmentsList, gpa, err := FetchData(uid)
+// Composite function for fetch and store data from Jupiter for each user
+func CrawlerJob() {
+	// Get all active users
+	users, err := dao.User.GetActiveUsers()
 	if err != nil {
 		return
 	}
 
-	// Store fetched data to database
-	StoreData(uid, gpa, courseList, assignmentsList)
+	// Loop through and start crawler job for users
+	for _, user := range users {
+		uid := user.ID
+		go func() {
+			// Fetch all data
+			courseList, assignmentsList, gpa, err := FetchData(uid)
+			if err != nil {
+				return
+			}
+
+			// Store fetched data to database
+			StoreData(uid, gpa, courseList, assignmentsList)
+		}()
+	}
 }
 
 // Open a webpage for Jupiter
@@ -87,7 +110,10 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	}
 
 	// Find user's Jupiter account info
-	data, _ := d.GetDataByUID(uid)
+	data, err := d.GetDataByUID(uid)
+	if err != nil {
+		return
+	}
 
 	// Login
 	if err = Login(page, data.Account, data.Password, uid); err != nil {
