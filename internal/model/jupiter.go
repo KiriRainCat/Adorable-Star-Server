@@ -50,7 +50,7 @@ func (o *Course) CopyFromOther(other *Course) {
 		o.PercentGrade = other.PercentGrade
 	}
 	if o.LetterGrade == "" {
-		o.LetterGrade = other.PercentGrade
+		o.LetterGrade = other.LetterGrade
 	}
 }
 
