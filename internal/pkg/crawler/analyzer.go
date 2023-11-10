@@ -40,7 +40,7 @@ func GetCourseGrade(page *rod.Page, courseName string, uid int) *model.Course {
 	WaitStable(page)
 	el, err := page.Timeout(time.Millisecond * 100).Element("table > tbody > tr.baseline.botline.printblue")
 	if err != nil {
-		return &model.Course{Title: courseName, UID: uid, PercentGrade: "-", LetterGrade: "-"}
+		return &model.Course{Title: courseName, UID: uid}
 	}
 
 	return &model.Course{
