@@ -56,5 +56,10 @@ func (s *AuthService) Login(name string, pwd string) (token string, err error) {
 		err = errors.New("internalErr")
 	}
 
+	// Update user active time
+	if dao.User.UpdateActiveTime(user.ID) != nil {
+		err = errors.New("internalErr")
+	}
+
 	return
 }
