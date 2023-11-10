@@ -24,7 +24,7 @@ var TaskPool []func(...any) any
 func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
-		u := "ws://127.0.0.1:7999/devtools/browser/351172ee-707a-4e17-962b-47674849c52a"
+		u := "ws://127.0.0.1:7999/devtools/browser/ae567b1f-9101-4708-af8c-1f74d5875bf8"
 		browser = rod.New().ControlURL(u).MustConnect()
 		for _, page := range browser.MustPages() {
 			page.MustClose()
@@ -123,7 +123,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	if err != nil {
 		return
 	}
-	if rod.Try(func() { page.MustElement("#touchnavbtn").MustClick() }) != nil {
+	if rod.Try(func() { page.Timeout(time.Second * 2).MustElement("#touchnavbtn").MustClick() }) != nil {
 		return
 	}
 
@@ -174,7 +174,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 			// Use update instead of create new course when found same course
 			if storedCourse.Title == course.Title {
 				// When both courses are completely equivalent
-				if storedCourse.LetterGrade == course.LetterGrade && storedCourse.PercentGrade == course.PercentGrade {
+				if strings.Contains(course.LetterGrade, storedCourse.LetterGrade) && strings.Contains(course.PercentGrade, storedCourse.PercentGrade) {
 					same = true
 					break
 				}
@@ -283,9 +283,7 @@ func FetchReportAndGPA(page *rod.Page) string {
 	if err != nil {
 		return ""
 	}
-	if NavNavigate(page, opts[5]) != nil {
-		return ""
-	}
+	opts[5].MustClick()
 
 	// Get GPA and report card image
 	return GetReportCardAndGPA(page, 1)

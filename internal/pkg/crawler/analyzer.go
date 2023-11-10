@@ -98,14 +98,13 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 // Use the current page of report card to crawl GPA and report card image
 func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
-	WaitStable(page)
+	WaitStable(page, 800)
 
 	// Get newest GPA
 	err := rod.Try(func() {
 		gpa = page.Timeout(time.Second * 2).MustElement("tr.blue.topbotline > td:last-child").MustText()
 	})
 	if err != nil {
-		println(err.Error())
 		return ""
 	}
 
