@@ -17,7 +17,7 @@
     "touchnavbtn"
   ],
   "files.exclude": {
-    "images/**": true,
+    "storage": true,
     "*.exe": true
   }
 }

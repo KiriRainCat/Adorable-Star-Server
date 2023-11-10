@@ -3,17 +3,11 @@ package crawler
 import (
 	"adorable-star/internal/global"
 	"adorable-star/internal/model"
-	"bufio"
-	"bytes"
-	"image"
-	"image/png"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/proto"
 )
 
 // Parse raw date "9/2" into something like "2023-09-02"
@@ -104,25 +98,19 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 // Use the current page of report card to crawl GPA and report card image
 func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
+	WaitStable(page)
+
 	// Get newest GPA
 	err := rod.Try(func() {
-		gpa = page.Timeout(time.Second * 2).MustElement("tr.blue.topbotline td:last-child").MustText()
+		gpa = page.Timeout(time.Second * 2).MustElement("tr.blue.topbotline > td:last-child").MustText()
 	})
 	if err != nil {
+		println(err.Error())
 		return ""
 	}
 
 	// Take a screenshot of the report card section
-	byte, _ := page.MustElement("table.bord").Screenshot(proto.PageCaptureScreenshotFormatPng, 0)
-
-	// Save the image
-	img, _, _ := image.Decode(bytes.NewReader(byte))
-	out, _ := os.Create(global.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
-	defer out.Close()
-
-	w := bufio.NewWriter(out)
-	png.Encode(w, img)
-	w.Flush()
+	page.MustElement("table.bord > tbody").MustScreenshot(global.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
 
 	return
 }

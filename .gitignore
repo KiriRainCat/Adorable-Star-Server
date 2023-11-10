@@ -8,4 +8,4 @@ constant.go
 
 # Other
 *.exe
-images
+storage

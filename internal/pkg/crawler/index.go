@@ -30,7 +30,7 @@ func Init() {
 			page.MustClose()
 		}
 	} else {
-		browser = rod.New().NoDefaultDevice().MustConnect()
+		browser = rod.New().MustConnect()
 	}
 
 	// Create page pool for multithreading
