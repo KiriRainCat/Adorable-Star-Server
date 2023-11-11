@@ -55,7 +55,22 @@ func Init() {
 }
 
 // Composite function for fetch and store data from Jupiter for each user
-func CrawlerJob() {
+func CrawlerJob(uid ...int) {
+	// When single user called api
+	if len(uid) > 0 {
+		// Start job for single user
+		go func() {
+			// Fetch all data
+			courseList, assignmentsList, gpa, err := FetchData(uid[0])
+			if err != nil {
+				return
+			}
+
+			// Store fetched data to database
+			StoreData(uid[0], gpa, courseList, assignmentsList)
+		}()
+	}
+
 	// Get all active users
 	users, err := dao.User.GetActiveUsers()
 	if err != nil {

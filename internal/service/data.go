@@ -3,6 +3,7 @@ package service
 import (
 	"adorable-star/internal/dao"
 	"adorable-star/internal/model"
+	"adorable-star/internal/pkg/crawler"
 	"adorable-star/internal/pkg/response"
 	"adorable-star/internal/pkg/util"
 	"errors"
@@ -14,6 +15,10 @@ var Data = &DataService{dao.Jupiter}
 
 type DataService struct {
 	d *dao.JupiterDAO
+}
+
+func (s *DataService) FetchData(uid int) {
+	go crawler.CrawlerJob(uid)
 }
 
 func (s *DataService) GetCourses(uid int) (courses []*model.Course, err error) {

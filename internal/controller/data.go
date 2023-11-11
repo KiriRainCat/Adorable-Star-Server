@@ -14,6 +14,16 @@ type DataController struct {
 	s *service.DataService
 }
 
+func (c *DataController) FetchData(ctx *gin.Context) {
+	c.s.FetchData(ctx.GetInt("uid"))
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
 func (c *DataController) GetCourses(ctx *gin.Context) {
 	// Get courses
 	courses, err := c.s.GetCourses(ctx.GetInt("uid"))

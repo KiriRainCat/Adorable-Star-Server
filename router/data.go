@@ -13,6 +13,7 @@ func DataRoutes(r *gin.RouterGroup) {
 	c := controller.Data
 
 	// Routes
+	g.POST("/fetch", c.FetchData)
 	g.GET("/report", c.GetReport)
 	g.GET("/course", c.GetCourses)
 	g.GET("/course/:id", c.GetCourse)
