@@ -46,7 +46,8 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 	}
 
 	// Authenticate Request Header
-	if m.s.VerifyToken(ctx.Request.Header.Get("Token")) != nil {
+	claims, err := m.s.VerifyToken(ctx.Request.Header.Get("Token"))
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"code": http.StatusUnauthorized,
 			"msg":  "用户 Token 验证不通过",
@@ -56,6 +57,7 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 		return
 	}
 
+	ctx.Set("uid", claims.UID)
 	ctx.Next()
 }
 

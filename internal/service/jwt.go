@@ -40,18 +40,19 @@ func (s *TokenService) GenerateToken(uid int, status int, email string) (token s
 }
 
 // Verify if a token is valid
-func (s *TokenService) VerifyToken(token string) error {
+func (s *TokenService) VerifyToken(token string) (claims *tokenClaims, err error) {
 	// Decode token
 	t, err := jwt.ParseWithClaims(token, &tokenClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(config.Config.Server.JwtEncrypt), nil
 	})
 	if err != nil {
-		return err
+		return
 	}
 
 	// Check if valid
 	if !t.Valid {
-		return errors.New("invalidToken")
+		err = errors.New("invalidToken")
+		return
 	}
 
 	// Bind to claims
@@ -59,16 +60,16 @@ func (s *TokenService) VerifyToken(token string) error {
 		// Check if uid matches decoded info
 		user, err := dao.User.GetUserByID(claims.UID)
 		if err != nil || user.Status != claims.Status || user.Email != claims.Email {
-			return errors.New("invalidToken")
+			return nil, errors.New("invalidToken")
 		}
 
 		// Update user active time
 		if dao.User.UpdateActiveTime(claims.UID) != nil {
-			return errors.New("invalidToken")
+			return nil, errors.New("invalidToken")
 		}
 
-		return nil
+		return claims, nil
 	} else {
-		return errors.New("invalidToken")
+		return nil, errors.New("invalidToken")
 	}
 }
