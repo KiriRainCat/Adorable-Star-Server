@@ -104,11 +104,16 @@ func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
 	WaitStable(page)
 
 	// Get newest GPA
-	err := rod.Try(func() {
-		gpa = page.Timeout(time.Second * 2).MustElement("tr.blue.topbotline > td:last-child").MustText()
-	})
-	if err != nil {
-		return ""
+	for i := 0; i < 3; i++ {
+		err := rod.Try(func() {
+			gpa = page.Timeout(time.Second * 2).MustElement("tr.blue.topbotline > td:last-child").MustText()
+		})
+		if err != nil {
+			return ""
+		}
+		if gpa != "" {
+			break
+		}
 	}
 
 	// Take a screenshot of the report card section

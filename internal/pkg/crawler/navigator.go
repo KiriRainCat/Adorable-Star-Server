@@ -7,9 +7,10 @@ import (
 	"github.com/go-rod/rod"
 )
 
-// Wait page stable for [ms_optional] ms, if not defined, default [200] ms
+// Wait page stable
 func WaitStable(page *rod.Page) {
 	page.WaitIdle(time.Second * 80)
+	page.WaitStable(time.Millisecond * 500)
 }
 
 // Use user provided account info to log into Jupiter

@@ -185,6 +185,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 
 		// Get all assignments
 		assignmentsList = append(assignmentsList, GetCourseAssignments(page, courseName, uid))
+		time.Sleep(time.Millisecond * 1200)
 	}
 
 	// Fetch GPA and report card image
