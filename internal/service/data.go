@@ -57,3 +57,17 @@ func (s *DataService) GetReport(uid int) (file []byte, err error) {
 	}
 	return
 }
+
+func (s *DataService) GetMessages(uid int) (messages []*model.Message, err error) {
+	messages, err = dao.Message.GetListByUID(uid)
+	return
+}
+
+func (s *DataService) GetMessage(id int) (message *model.Message, err error) {
+	message, err = dao.Message.GetByID(id)
+	return
+}
+
+func (s *DataService) DeleteMessage(id int) error {
+	return dao.Message.Delete(id)
+}

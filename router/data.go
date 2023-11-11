@@ -13,9 +13,12 @@ func DataRoutes(r *gin.RouterGroup) {
 	c := controller.Data
 
 	// Routes
+	g.GET("/report", c.GetReport)
 	g.GET("/course", c.GetCourses)
 	g.GET("/course/:id", c.GetCourse)
 	g.GET("/assignment", c.GetAssignments)
 	g.GET("/assignment/:id", c.GetAssignment)
-	g.GET("/report", c.GetReport)
+	g.GET("/message", c.GetMessages)
+	g.GET("/message/:id", c.GetMessage)
+	g.DELETE("/message/:id", c.DeleteMessage)
 }
