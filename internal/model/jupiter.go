@@ -9,7 +9,7 @@ import (
 
 type JupiterData struct {
 	ID        int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
-	UID       int       `json:"uid,omitempty"`
+	UID       int       `json:"uid,omitempty" gorm:"unique"`
 	Account   string    `json:"account,omitempty"`
 	Password  string    `json:"password,omitempty"`
 	GPA       string    `json:"gpa,omitempty"`

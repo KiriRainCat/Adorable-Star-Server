@@ -27,6 +27,10 @@ func (*JupiterDAO) GetAssignmentsByCourseAndUID(uid int, courseTitle string) (as
 	return
 }
 
+func (*JupiterDAO) InsertData(data *model.JupiterData) error {
+	return DB.Create(data).Error
+}
+
 func (*JupiterDAO) InsertCourse(course *model.Course) error {
 	return DB.Create(course).Error
 }

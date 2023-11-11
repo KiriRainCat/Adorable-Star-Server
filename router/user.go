@@ -8,14 +8,15 @@ import (
 )
 
 func AuthRoutes(r *gin.RouterGroup) {
-	g := r.Group("/auth")
+	g := r.Group("/user")
 
 	// Deps
-	c := controller.Auth
+	c := controller.User
 	m := middleware.Auth
 
 	// Routes
 	g.POST("/login", c.Login)
 	g.POST("/logout", c.Logout)
+	g.POST("/complete-info", c.CompleteInfo)
 	g.POST("/register", m.AuthenticateAdmin, c.Register)
 }
