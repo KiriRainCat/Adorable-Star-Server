@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/go-rod/rod"
@@ -18,7 +17,7 @@ func WaitStable(page *rod.Page, ms_optional ...int) {
 }
 
 // Use user provided account info to log into Jupiter
-func Login(page *rod.Page, name string, pwd string, uid int) error {
+func Login(page *rod.Page, name string, pwd string) error {
 	err := rod.Try(func() {
 		WaitStable(page)
 		// Enter basic school info
@@ -39,18 +38,13 @@ func Login(page *rod.Page, name string, pwd string, uid int) error {
 		return err
 	}
 
-	// Check if request blocked by Cloudflare
-	if strings.Contains(page.MustElement("body").MustText(), "malicious") {
-		return errors.New("crawler request blocked by cloudflare")
-	}
-
 	// Select the newest school year
 	err = rod.Try(func() {
 		page.Timeout(time.Second * 2).MustElement("#schoolyeartab").MustClick()
 		page.Timeout(time.Second * 2).MustElement("#schoolyearlist > div:nth-child(1)").MustClick()
 	})
 	if err != nil {
-		return err
+		return errors.New("invalidJupiterAccount")
 	}
 
 	WaitStable(page)

@@ -26,9 +26,11 @@ func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
 		browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
-		for _, page := range browser.MustPages() {
+		pages := browser.MustPages()
+		for _, page := range pages {
 			page.MustClose()
 		}
+		log.Printf("INFO closed %v browser pages from previous session\n", len(pages))
 	} else {
 		browser = rod.New().MustConnect()
 	}
@@ -77,9 +79,15 @@ func CrawlerJob() {
 }
 
 // Open a webpage for Jupiter
-func OpenJupiterPage() (page *rod.Page, err error) {
+func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
+	// Whether using page pool
+	if len(notPool) > 0 && notPool[0] {
+		page = browser.MustIncognito().MustPage().MustSetCookies()
+	} else {
+		page = pagePool.Get(pageCreate).MustSetCookies()
+	}
+
 	// Navigate to Jupiter Ed login page
-	page = pagePool.Get(pageCreate).MustSetCookies()
 	err = page.Navigate("https://login.jupitered.com/login/")
 	if err != nil {
 		return
@@ -88,33 +96,52 @@ func OpenJupiterPage() (page *rod.Page, err error) {
 	// Bypass Cloudflare detection for crawler
 	page.MustEvalOnNewDocument("const newProto = navigator.__proto__;delete newProto.webdriver;navigator.__proto__ = newProto;")
 
+	// Check if request blocked by Cloudflare
+	if strings.Contains(page.MustElement("body").MustText(), "malicious") {
+		dao.Message.Insert(&model.Message{
+			UID:  uid,
+			Type: -1,
+			Msg:  "cfToken",
+		})
+	}
+
 	return
+}
+
+// Verify if a Jupiter Ed account is valid
+func VerifyAccount(uid int, account string, pwd string) error {
+	// Open a Jupiter page that's not affected by page pool size
+	page, err := OpenJupiterPage(uid, true)
+	defer page.MustClose()
+	if err != nil {
+		return err
+	}
+
+	// Check account
+	if err := Login(page, account, pwd); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Fetch all Jupiter data for a student
 func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.Assignment, gpa string, err error) {
-	// Get a page to access Jupiter
-	page, err := OpenJupiterPage()
-	defer pagePool.Put(page)
-	if err != nil {
-		return
-	}
-
 	// Find user's Jupiter account info
 	data, err := d.GetDataByUID(uid)
 	if err != nil {
 		return
 	}
 
+	// Get a page to access Jupiter
+	page, err := OpenJupiterPage(uid)
+	defer pagePool.Put(page)
+	if err != nil {
+		return
+	}
+
 	// Login
-	if err = Login(page, data.Account, data.Password, uid); err != nil {
-		if strings.Contains(err.Error(), "cloudflare") {
-			dao.Message.Insert(&model.Message{
-				UID:  uid,
-				Type: -1,
-				Msg:  "cfToken",
-			})
-		}
+	if err = Login(page, data.Account, data.Password); err != nil {
 		return
 	}
 
@@ -292,7 +319,7 @@ func FetchReportAndGPA(page *rod.Page) string {
 // Fetch assignment description
 func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignment {
 	// Get a page to access Jupiter
-	page, err := OpenJupiterPage()
+	page, err := OpenJupiterPage(uid)
 	defer pagePool.Put(page)
 	if err != nil {
 		return assignment
@@ -302,14 +329,7 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	data, _ := d.GetDataByUID(uid)
 
 	// Login
-	if err := Login(page, data.Account, data.Password, uid); err != nil {
-		if strings.Contains(err.Error(), "cloudflare") {
-			dao.Message.Insert(&model.Message{
-				UID:  uid,
-				Type: -1,
-				Msg:  "cfToken",
-			})
-		}
+	if err := Login(page, data.Account, data.Password); err != nil {
 		return assignment
 	}
 
