@@ -35,7 +35,7 @@ func (c *DataController) GetCourses(ctx *gin.Context) {
 
 func (c *DataController) GetCourse(ctx *gin.Context) {
 	// Get query and check if it's empty
-	id, _ := strconv.Atoi(ctx.Query("id"))
+	id, _ := strconv.Atoi(ctx.Param("id"))
 	if id == 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": http.StatusBadRequest,
@@ -84,7 +84,7 @@ func (c *DataController) GetAssignments(ctx *gin.Context) {
 
 func (c *DataController) GetAssignment(ctx *gin.Context) {
 	// Get query and check if it's empty
-	id, _ := strconv.Atoi(ctx.Query("id"))
+	id, _ := strconv.Atoi(ctx.Param("id"))
 	if id == 0 {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": http.StatusBadRequest,

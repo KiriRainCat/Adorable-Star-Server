@@ -13,9 +13,9 @@ func DataRoutes(r *gin.RouterGroup) {
 	c := controller.Data
 
 	// Routes
-	g.GET("/courses", c.GetCourses)
-	g.GET("/course", c.GetCourse)
-	g.GET("/assignments", c.GetAssignments)
-	g.GET("/assignment", c.GetAssignment)
+	g.GET("/course", c.GetCourses)
+	g.GET("/course/:id", c.GetCourse)
+	g.GET("/assignment", c.GetAssignments)
+	g.GET("/assignment/:id", c.GetAssignment)
 	g.GET("/report", c.GetReport)
 }
