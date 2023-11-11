@@ -17,8 +17,23 @@ func (*JupiterDAO) GetDataByUID(uid int) (data *model.JupiterData, err error) {
 	return
 }
 
+func (*JupiterDAO) GetCourseByID(id int) (course *model.Course, err error) {
+	err = DB.First(&course, id).Error
+	return
+}
+
 func (*JupiterDAO) GetCoursesByUID(uid int) (courses []*model.Course, err error) {
 	err = DB.Find(&courses, "uid = ?", uid).Error
+	return
+}
+
+func (*JupiterDAO) GetAssignmentByID(id int) (assignment *model.Assignment, err error) {
+	err = DB.First(&assignment, id).Error
+	return
+}
+
+func (*JupiterDAO) GetAssignmentsByUID(uid int) (assignments []*model.Assignment, err error) {
+	err = DB.Where("uid = ?", uid).Find(&assignments).Error
 	return
 }
 

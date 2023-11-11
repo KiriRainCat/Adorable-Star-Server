@@ -36,6 +36,7 @@ func main() {
 
 	// Register API Routes
 	router.AuthRoutes(r)
+	router.DataRoutes(r)
 
 	server.Run(":" + config.Config.Server.Port)
 }
