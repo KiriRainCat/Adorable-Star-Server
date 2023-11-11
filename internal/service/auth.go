@@ -1,8 +1,8 @@
 package service
 
 import (
-	"adorable-star/config"
 	"adorable-star/internal/dao"
+	"adorable-star/internal/pkg/config"
 	"errors"
 	"strings"
 
@@ -20,7 +20,7 @@ func (s *AuthService) Register(email string, username string, pwd string) error 
 	// TODO: 实现邮箱验证码
 
 	// Encrypt pwd
-	encryptedPwd, err := bcrypt.GenerateFromPassword([]byte(pwd+config.ENCRYPT_SALT), bcrypt.MinCost)
+	encryptedPwd, err := bcrypt.GenerateFromPassword([]byte(pwd+config.Config.Server.EncryptSalt), bcrypt.MinCost)
 	if err != nil {
 		return errors.New("internalErr")
 	}
@@ -45,7 +45,7 @@ func (s *AuthService) Login(name string, pwd string) (token string, err error) {
 	}
 
 	// When pwd does not match
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pwd+config.ENCRYPT_SALT)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pwd+config.Config.Server.EncryptSalt)); err != nil {
 		err = errors.New("账号或密码错误")
 		return
 	}

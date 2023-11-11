@@ -1,9 +1,9 @@
 package main
 
 import (
-	"adorable-star/config"
 	"adorable-star/internal/dao"
 	"adorable-star/internal/middleware"
+	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/crawler"
 	"adorable-star/router"
 	"net/http"
@@ -12,10 +12,9 @@ import (
 )
 
 func main() {
-	// Init database
+	// Initialization
+	config.Init()
 	dao.Init()
-
-	// Launch Crawler
 	crawler.Init()
 	authMiddleware := middleware.Auth
 
@@ -38,5 +37,5 @@ func main() {
 	// Register API Routes
 	router.AuthRoutes(r)
 
-	server.Run(config.PORT)
+	server.Run(":" + config.Config.Server.Port)
 }

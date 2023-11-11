@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"adorable-star/internal/global"
 	"adorable-star/internal/model"
+	"adorable-star/internal/pkg/util"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
@@ -12,7 +12,7 @@ import (
 var DB *gorm.DB
 
 func Init() {
-	DB, _ = gorm.Open(sqlite.Open(global.GetCwd()+"/dev.db"), &gorm.Config{
+	DB, _ = gorm.Open(sqlite.Open(util.GetCwd()+"/dev.db"), &gorm.Config{
 		NamingStrategy:         schema.NamingStrategy{SingularTable: true},
 		SkipDefaultTransaction: true,
 	})

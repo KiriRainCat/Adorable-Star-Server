@@ -1,8 +1,8 @@
 package service
 
 import (
-	"adorable-star/config"
 	"adorable-star/internal/dao"
+	"adorable-star/internal/pkg/config"
 	"errors"
 	"time"
 
@@ -28,14 +28,14 @@ func (s *TokenService) GenerateToken(uid int, status int, email string) (token s
 		Status: status,
 		Email:  email,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    config.JWT_ISSUER,
+			Issuer:    config.Config.Server.JwtIssuer,
 			NotBefore: jwt.NewNumericDate(time.Now().Add(-time.Minute)),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		},
 	})
 
 	// Sign the token with encryption key
-	token, err = t.SignedString(config.JWT_ENCRYPT)
+	token, err = t.SignedString([]byte(config.Config.Server.JwtEncrypt))
 	return
 }
 
@@ -43,7 +43,7 @@ func (s *TokenService) GenerateToken(uid int, status int, email string) (token s
 func (s *TokenService) VerifyToken(token string) error {
 	// Decode token
 	t, err := jwt.ParseWithClaims(token, &tokenClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return config.JWT_ENCRYPT, nil
+		return []byte(config.Config.Server.JwtEncrypt), nil
 	})
 	if err != nil {
 		return err

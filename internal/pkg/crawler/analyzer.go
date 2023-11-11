@@ -1,8 +1,8 @@
 package crawler
 
 import (
-	"adorable-star/internal/global"
 	"adorable-star/internal/model"
+	"adorable-star/internal/pkg/util"
 	"strconv"
 	"strings"
 	"time"
@@ -109,7 +109,7 @@ func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
 	}
 
 	// Take a screenshot of the report card section
-	page.MustElement("table.bord > tbody").MustScreenshot(global.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
+	page.MustElement("table.bord > tbody").MustScreenshot(util.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
 
 	return
 }

@@ -4,7 +4,7 @@
 
 # Sensitive Files
 dev.db
-constant.go
+config.yaml
 
 # Other
 *.exe

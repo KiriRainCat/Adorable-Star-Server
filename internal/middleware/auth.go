@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"adorable-star/config"
+	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/service"
 	"net/http"
 	"strings"
@@ -23,7 +23,7 @@ func (m *AuthMiddleware) Authenticate(ctx *gin.Context) {
 	}
 
 	// Authenticate Request Header
-	if ctx.Request.Header.Get("Authorization") != config.REQUEST_AUTH {
+	if ctx.Request.Header.Get("Authorization") != config.Config.Server.RequestAuth {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"code": http.StatusUnauthorized,
 			"msg":  "客户端验证不通过",
@@ -67,7 +67,7 @@ func (m *AuthMiddleware) AuthenticateAdmin(ctx *gin.Context) {
 	}
 
 	// Authenticate Request Header
-	if ctx.Request.Header.Get("Admin") != config.ADMIN_AUTH {
+	if ctx.Request.Header.Get("Admin") != config.Config.Server.AdminAuth {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"code": http.StatusUnauthorized,
 			"msg":  "管理员验证不通过",

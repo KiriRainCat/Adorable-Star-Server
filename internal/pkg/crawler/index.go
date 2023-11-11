@@ -3,6 +3,7 @@ package crawler
 import (
 	"adorable-star/internal/dao"
 	"adorable-star/internal/model"
+	"adorable-star/internal/pkg/config"
 	"log"
 	"strconv"
 	"strings"
@@ -24,8 +25,7 @@ var TaskPool []func(...any) any
 func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
-		u := "ws://127.0.0.1:7999/devtools/browser/ae567b1f-9101-4708-af8c-1f74d5875bf8"
-		browser = rod.New().ControlURL(u).MustConnect()
+		browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
 		for _, page := range browser.MustPages() {
 			page.MustClose()
 		}
@@ -34,7 +34,7 @@ func Init() {
 	}
 
 	// Create page pool for multithreading
-	pagePool = rod.NewPagePool(10)
+	pagePool = rod.NewPagePool(config.Config.Crawler.MaxParallel)
 	pageCreate = func() *rod.Page {
 		return browser.MustIncognito().MustPage()
 	}
@@ -42,7 +42,7 @@ func Init() {
 
 	// Start scheduled crawler job
 	go CrawlerJob()
-	t := time.NewTicker(time.Minute * 30)
+	t := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval))
 
 	// For every 30 minutes, fetch jupiter data for user
 	go func() {
