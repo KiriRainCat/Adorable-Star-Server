@@ -26,11 +26,6 @@ func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
 		browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
-		pages := browser.MustPages()
-		for _, page := range pages {
-			page.MustClose()
-		}
-		log.Printf("INFO closed %v browser pages from previous session\n", len(pages))
 	} else {
 		browser = rod.New().MustConnect()
 	}
@@ -111,14 +106,15 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	// Bypass Cloudflare detection for crawler
 	page.MustEvalOnNewDocument("const newProto = navigator.__proto__;delete newProto.webdriver;navigator.__proto__ = newProto;")
 
-	// Check if request blocked by Cloudflare
-	if strings.Contains(page.MustElement("body").MustText(), "malicious") {
-		dao.Message.Insert(&model.Message{
-			UID:  uid,
-			Type: -1,
-			Msg:  "cfToken",
-		})
-	}
+	// TODO: 记得以后再开启 cloudflare 拦截检测
+	// // Check if request blocked by Cloudflare
+	// if strings.Contains(page.MustElement("body").MustText(), "malicious") {
+	// 	dao.Message.Insert(&model.Message{
+	// 		UID:  uid,
+	// 		Type: -1,
+	// 		Msg:  "cfToken",
+	// 	})
+	// }
 
 	return
 }

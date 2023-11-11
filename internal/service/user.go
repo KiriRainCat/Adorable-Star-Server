@@ -77,7 +77,6 @@ func (s *UserService) Login(name string, pwd string) (token string, uid int, err
 func (s *UserService) CompleteInfo(uid int, account string, pwd string) error {
 	// Verify the Jupiter account given by the user
 	if err := crawler.VerifyAccount(uid, account, pwd); err != nil {
-		println(err.Error())
 		if err.Error() == "invalidJupiterAccount" {
 			return errors.New("jupiter 账号或密码错误")
 		}

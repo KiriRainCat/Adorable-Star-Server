@@ -32,6 +32,7 @@ func FormatJupiterDueDate(raw string) string {
 // Use the current page of course to crawl course grade
 func GetCourseGrade(page *rod.Page, courseName string, uid int) *model.Course {
 	WaitStable(page)
+
 	el, err := page.Timeout(time.Millisecond * 100).Element("table > tbody > tr.baseline.botline.printblue")
 	if err != nil {
 		return &model.Course{Title: courseName, UID: uid}
@@ -40,13 +41,15 @@ func GetCourseGrade(page *rod.Page, courseName string, uid int) *model.Course {
 	return &model.Course{
 		UID:          uid,
 		Title:        courseName,
-		LetterGrade:  el.MustElement(":nth-child(2)").MustText(),
-		PercentGrade: el.MustElement(":nth-child(3)").MustText(),
+		LetterGrade:  el.MustElement("td:nth-child(2)").MustText(),
+		PercentGrade: el.MustElement("td:nth-child(3)").MustText(),
 	}
 }
 
 // Use the current page of course to crawl all assignments
 func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignments []*model.Assignment) {
+	WaitStable(page)
+
 	// Get course assignments
 	var data rod.Elements
 	err := rod.Try(func() {
@@ -98,7 +101,7 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 // Use the current page of report card to crawl GPA and report card image
 func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
-	WaitStable(page, 800)
+	WaitStable(page)
 
 	// Get newest GPA
 	err := rod.Try(func() {

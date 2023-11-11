@@ -8,12 +8,8 @@ import (
 )
 
 // Wait page stable for [ms_optional] ms, if not defined, default [200] ms
-func WaitStable(page *rod.Page, ms_optional ...int) {
-	ms := 100
-	if len(ms_optional) > 0 {
-		ms = ms_optional[0]
-	}
-	page.WaitStable(time.Millisecond * time.Duration(ms))
+func WaitStable(page *rod.Page) {
+	page.WaitIdle(time.Second * 80)
 }
 
 // Use user provided account info to log into Jupiter
@@ -32,7 +28,7 @@ func Login(page *rod.Page, name string, pwd string) error {
 		page.Timeout(time.Second * 2).MustElement("#text_password1").MustInput(pwd)
 
 		page.Timeout(time.Second * 2).MustElement("#loginbtn").MustClick()
-		WaitStable(page, 800)
+		WaitStable(page)
 	})
 	if err != nil {
 		return err
@@ -64,7 +60,7 @@ func NavGetOptions(page *rod.Page) (opts rod.Elements, courses rod.Elements, err
 
 // Navigate to designated target on the nav bar
 func NavNavigate(page *rod.Page, target *rod.Element) error {
-	WaitStable(page, 800)
+	WaitStable(page)
 	err := rod.Try(func() {
 		target.Timeout(time.Second * 2).MustClick()
 	})
