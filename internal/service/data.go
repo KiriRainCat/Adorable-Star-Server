@@ -37,6 +37,11 @@ func (s *DataService) FetchAssignmentDesc(uid int, id int) error {
 	return nil
 }
 
+func (s *DataService) GetData(uid int) (data *model.JupiterData, err error) {
+	data, err = s.d.GetDataByUID(uid)
+	return
+}
+
 func (s *DataService) GetCourses(uid int) (courses []*model.Course, err error) {
 	courses, err = s.d.GetCoursesByUID(uid)
 	return
