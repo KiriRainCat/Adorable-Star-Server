@@ -21,6 +21,22 @@ func (s *DataService) FetchData(uid int) {
 	go crawler.CrawlerJob(uid)
 }
 
+func (s *DataService) FetchAssignmentDesc(uid int, id int) error {
+	// Get assignment data
+	storedAssignment, err := s.d.GetAssignmentByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Start fetching assignment description
+	go func() {
+		assignment := crawler.FetchAssignmentDesc(uid, storedAssignment)
+		crawler.StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
+	}()
+
+	return nil
+}
+
 func (s *DataService) GetCourses(uid int) (courses []*model.Course, err error) {
 	courses, err = s.d.GetCoursesByUID(uid)
 	return
