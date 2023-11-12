@@ -3,9 +3,8 @@
 !.vscode/settings.json
 
 # Sensitive Files
-dev.db
+storage
 config.yaml
 
 # Other
 *.exe
-storage
