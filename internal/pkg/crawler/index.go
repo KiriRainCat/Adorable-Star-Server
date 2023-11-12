@@ -64,6 +64,7 @@ func CrawlerJob(uid ...int) {
 			// Store fetched data to database
 			StoreData(uid[0], gpa, courseList, assignmentsList)
 		}()
+		return
 	}
 
 	// Get all active users
@@ -170,13 +171,16 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 		// Nav bar navigation to course page
 		_, courses, err := NavGetOptions(page)
 		if err != nil {
+			idx--
 			continue
 		}
 		var courseName string
 		if rod.Try(func() { courseName = courses[idx].Timeout(time.Second * 2).MustText() }) != nil {
+			idx--
 			continue
 		}
 		if NavNavigate(page, courses[idx]) != nil {
+			idx--
 			continue
 		}
 
@@ -185,7 +189,6 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 
 		// Get all assignments
 		assignmentsList = append(assignmentsList, GetCourseAssignments(page, courseName, uid))
-		time.Sleep(time.Millisecond * 1200)
 	}
 
 	// Fetch GPA and report card image
@@ -270,13 +273,13 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		for _, storedAssignment := range storedAssignments {
 			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due && storedAssignment.From == assignment.From {
+				old = storedAssignment
+				assignment.CopyFromOther(storedAssignment)
+
 				// When both courses are completely equivalent
 				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
 					same = true
 				}
-
-				old = storedAssignment
-				assignment.CopyFromOther(storedAssignment)
 				break
 			}
 		}
@@ -286,7 +289,9 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			count++
 			if assignment.ID == 0 {
 				// If assignment is new put it into tmp list
-				newAssignments = append(newAssignments, assignment)
+				if assignment != nil {
+					newAssignments = append(newAssignments, assignment)
+				}
 			} else {
 				d.UpdateAssignment(old, assignment)
 			}
@@ -294,7 +299,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	}
 
 	// Too much new assignments, store them directly without description
-	if len(newAssignments) > 5 { // TODO: 数字暂时的，确定负载后再改
+	if len(newAssignments) > 5 {
 		for _, assignment := range newAssignments {
 			d.InsertAssignment(assignment)
 		}

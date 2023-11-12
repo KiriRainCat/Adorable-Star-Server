@@ -7,21 +7,21 @@ import (
 	"github.com/go-rod/rod"
 )
 
-// Wait page stable
+// Wait for loading to disappear
 func WaitStable(page *rod.Page) {
-	page.WaitIdle(time.Second * 80)
-	page.WaitStable(time.Millisecond * 500)
+	page.MustWaitElementsMoreThan("#busy[class*='hide']", 0)
 }
 
 // Use user provided account info to log into Jupiter
 func Login(page *rod.Page, name string, pwd string) error {
 	err := rod.Try(func() {
-		WaitStable(page)
+		page.Timeout(time.Second*30).MustWaitElementsMoreThan("#text_school1", 0)
+
 		// Enter basic school info
 		page.Timeout(time.Second * 2).MustElement("#text_school1").MustInput("Georgia School Ningbo")
 		page.Timeout(time.Second * 2).MustElement("#text_city1").MustInput("Ningbo")
 		page.Timeout(time.Second * 2).MustElement("#showcity > div.menuspace").MustClick()
-		WaitStable(page)
+		page.WaitStable(time.Millisecond * 100)
 		page.Timeout(time.Second * 2).MustElement("#menulist_region1 > div[val='xx_xx']").MustClick()
 
 		// Enter user account for login
@@ -29,13 +29,13 @@ func Login(page *rod.Page, name string, pwd string) error {
 		page.Timeout(time.Second * 2).MustElement("#text_password1").MustInput(pwd)
 
 		page.Timeout(time.Second * 2).MustElement("#loginbtn").MustClick()
-		WaitStable(page)
 	})
 	if err != nil {
 		return err
 	}
 
 	// Select the newest school year
+	WaitStable(page)
 	err = rod.Try(func() {
 		page.Timeout(time.Second * 2).MustElement("#schoolyeartab").MustClick()
 		page.Timeout(time.Second * 2).MustElement("#schoolyearlist > div:nth-child(1)").MustClick()
