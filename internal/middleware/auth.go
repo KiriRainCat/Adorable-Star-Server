@@ -40,7 +40,8 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 	// Let PING api to pass
 	if strings.Contains(ctx.Request.URL.String(), "ping") ||
 		strings.Contains(ctx.Request.URL.String(), "login") ||
-		strings.Contains(ctx.Request.URL.String(), "register") {
+		strings.Contains(ctx.Request.URL.String(), "register") ||
+		strings.Contains(ctx.Request.URL.String(), "complete-info") {
 		ctx.Next()
 		return
 	}
