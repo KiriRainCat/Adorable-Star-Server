@@ -75,6 +75,13 @@ func (s *UserService) Login(name string, pwd string) (token string, uid int, err
 }
 
 func (s *UserService) CompleteInfo(uid int, account string, pwd string) error {
+	// Check if user exist or already has Jupiter info
+	_, err := s.d.GetUserByID(uid)
+	_, exist := dao.Jupiter.GetDataByUID(uid)
+	if err != nil || exist == nil {
+		return errors.New("internalErr")
+	}
+
 	// Verify the Jupiter account given by the user
 	if err := crawler.VerifyAccount(uid, account, pwd); err != nil {
 		if err.Error() == "invalidJupiterAccount" {
