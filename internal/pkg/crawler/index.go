@@ -4,7 +4,7 @@ import (
 	"adorable-star/internal/dao"
 	"adorable-star/internal/model"
 	"adorable-star/internal/pkg/config"
-	"log"
+	"adorable-star/internal/pkg/util"
 	"strconv"
 	"strings"
 	"sync"
@@ -55,6 +55,8 @@ func CrawlerJob(uid ...int) {
 	if len(uid) > 0 {
 		// Start job for single user
 		go func() {
+			startedAt := time.Now()
+
 			// Fetch all data
 			courseList, assignmentsList, gpa, err := FetchData(uid[0])
 			if err != nil {
@@ -62,7 +64,7 @@ func CrawlerJob(uid ...int) {
 			}
 
 			// Store fetched data to database
-			StoreData(uid[0], gpa, courseList, assignmentsList)
+			StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
 		}()
 		return
 	}
@@ -77,6 +79,8 @@ func CrawlerJob(uid ...int) {
 	for _, user := range users {
 		uid := user.ID
 		go func() {
+			startedAt := time.Now()
+
 			// Fetch all data
 			courseList, assignmentsList, gpa, err := FetchData(uid)
 			if err != nil {
@@ -84,7 +88,7 @@ func CrawlerJob(uid ...int) {
 			}
 
 			// Store fetched data to database
-			StoreData(uid, gpa, courseList, assignmentsList)
+			StoreData(uid, gpa, courseList, assignmentsList, &startedAt)
 		}()
 	}
 }
@@ -167,7 +171,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	}
 
 	// Navigate through all of the courses to fetch course data
-	for idx := range courses {
+	for idx := 0; idx < len(courses); idx++ {
 		// Nav bar navigation to course page
 		_, courses, err := NavGetOptions(page)
 		if err != nil {
@@ -198,7 +202,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 }
 
 // Store all fetched data to database
-func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment) {
+func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList [][]*model.Assignment, startedAt *time.Time) {
 	var count = 0
 	wg := &sync.WaitGroup{}
 
@@ -247,8 +251,11 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 		}()
 	}
 	wg.Wait()
+
 	if count != 0 {
-		log.Printf("INFO [%v] DB Actions Done for User [%v]\n", count, uid)
+		now := time.Now()
+		diff := (now.Minute()*60 + now.Second()) - (startedAt.Minute()*60 + startedAt.Second())
+		util.Log("crawler", "INFO [%v] DB Actions for User [%v] (%vs)", count, uid, diff)
 	}
 
 	// Update fetch time and GPA
