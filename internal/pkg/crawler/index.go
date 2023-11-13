@@ -292,7 +292,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		}
 
 		// Insert or update assignment
-		if !same {
+		if !same && assignment.Title != "" {
 			count++
 			if assignment.ID == 0 {
 				// If assignment is new put it into tmp list
