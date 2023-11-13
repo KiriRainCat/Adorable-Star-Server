@@ -15,5 +15,5 @@ func Log(scope string, format string, v ...any) {
 		log.Printf(format, v...)
 	}
 
-	log.New(writer, "\r\n", log.Ldate|log.Ltime).Printf(format, v...)
+	log.New(writer, "", log.Ldate|log.Ltime).Printf(format, v...)
 }
