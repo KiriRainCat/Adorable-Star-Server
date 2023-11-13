@@ -7,6 +7,7 @@ import (
 	"adorable-star/internal/pkg/crawler"
 	"adorable-star/router"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,9 +20,12 @@ func main() {
 	authMiddleware := middleware.Auth
 
 	// Create gin-engine and base router-group
-	server := gin.Default()
+	gin.Default()
+	server := gin.New()
 	r := server.Group("/api")
-	r.Use(authMiddleware.Authenticate).
+	r.Use(gin.LoggerWithWriter(os.Stdout, "/api/ping")).
+		Use(gin.Recovery()).
+		Use(authMiddleware.Authenticate).
 		Use(authMiddleware.AuthenticateUser)
 
 	//* --------------------------- API Registration --------------------------- *//
