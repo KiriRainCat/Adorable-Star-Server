@@ -47,6 +47,7 @@ func Init() {
 
 	// Use Write-Ahead Logging (WAL) mode
 	DB.Exec("PRAGMA journal_mode=WAL;")
+	DB.Exec("PRAGMA SYNCHRONOUS=NORMAL")
 
 	// Set connection pool size
 	db, _ := DB.DB()
