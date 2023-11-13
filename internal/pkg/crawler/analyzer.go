@@ -92,7 +92,7 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 	var desc string
 	err := rod.Try(func() {
-		desc = page.Timeout(time.Second * 2).MustElement("#mainpage >div:nth-child(6) > div").MustText()
+		desc = page.Timeout(time.Second*2).MustElementR("#mainpage > div", "/Directions/").MustText()
 	})
 	if err != nil {
 		return ""
