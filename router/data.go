@@ -2,6 +2,7 @@ package router
 
 import (
 	"adorable-star/internal/controller"
+	"adorable-star/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,7 @@ func DataRoutes(r *gin.RouterGroup) {
 	g := r.Group("/data")
 
 	// Deps
+	g.Use(middleware.LongPolling)
 	c := controller.Data
 
 	// Routes
