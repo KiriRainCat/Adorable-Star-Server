@@ -39,7 +39,6 @@ func Init() {
 	}
 	for _, user := range users {
 		global.NotificationChan[user.ID] = make(chan []any, 1)
-		println(user.ID)
 	}
 
 	// Create page pool for multithreading
