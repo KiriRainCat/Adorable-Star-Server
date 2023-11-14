@@ -29,6 +29,11 @@ func (*UserDAO) GetUserByUsernameOrEmail(name string) (*model.User, error) {
 	return &user, nil
 }
 
+func (*UserDAO) GetUsers() (users []*model.User, err error) {
+	err = DB.Find(&users).Error
+	return
+}
+
 func (*UserDAO) GetActiveUsers() (users []*model.User, err error) {
 	err = DB.Where("active_at > ?", time.Now().Add(-time.Hour*24)).Find(&users).Error
 	return
