@@ -20,7 +20,8 @@ var browser *rod.Browser
 var pagePool rod.PagePool
 var pageCreate func() *rod.Page
 
-var TaskPool []func(...any) any
+var PagePoolLoad int
+var TaskCount int
 
 // Initialize crawler with page pool to execute tasks asynchronously
 func Init() {
@@ -90,6 +91,7 @@ func CrawlerJob(uid ...int) {
 	for _, user := range users {
 		uid := user.ID
 		go func() {
+			TaskCount++
 			startedAt := time.Now()
 
 			// Fetch all data
@@ -100,6 +102,7 @@ func CrawlerJob(uid ...int) {
 
 			// Store fetched data to database
 			StoreData(uid, gpa, courseList, assignmentsList, &startedAt)
+			TaskCount--
 		}()
 	}
 }
@@ -109,13 +112,16 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	// Whether using page pool
 	if len(notPool) > 0 && notPool[0] {
 		page = browser.MustIncognito().MustPage().MustSetCookies()
+		PagePoolLoad++
 	} else {
 		page = pagePool.Get(pageCreate).MustSetCookies()
+		PagePoolLoad++
 	}
 
 	// Navigate to Jupiter Ed login page
 	err = page.Navigate("https://login.jupitered.com/login/")
 	if err != nil {
+		PagePoolLoad--
 		return
 	}
 
@@ -162,7 +168,10 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
-	defer pagePool.Put(page)
+	defer func() {
+		pagePool.Put(page)
+		PagePoolLoad--
+	}()
 	if err != nil {
 		return
 	}
@@ -220,6 +229,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	// Get stored course list
 	storedCourses, err := d.GetCoursesByUID(uid)
 	if err != nil {
+		PagePoolLoad--
 		return
 	}
 
@@ -271,6 +281,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 
 	// Update fetch time and GPA
 	d.UpdateFetchTimeAndGPA(uid, gpa)
+	PagePoolLoad--
 }
 
 // Store all fetched assignments data to database
@@ -353,10 +364,16 @@ func FetchReportAndGPA(page *rod.Page) string {
 
 // Fetch assignment description
 func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignment {
+	TaskCount++
+
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
-	defer pagePool.Put(page)
+	defer func() {
+		pagePool.Put(page)
+		PagePoolLoad--
+	}()
 	if err != nil {
+		TaskCount--
 		return assignment
 	}
 
@@ -365,12 +382,14 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 
 	// Login
 	if err := Login(page, data.Account, data.Password); err != nil {
+		TaskCount--
 		return assignment
 	}
 
 	// Get courses from nav bar
 	_, courses, err := NavGetOptions(page)
 	if err != nil {
+		TaskCount--
 		return assignment
 	}
 
@@ -392,6 +411,7 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 		elements = page.Timeout(time.Second * 2).MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
 	})
 	if err != nil {
+		TaskCount--
 		return assignment
 	}
 
@@ -408,5 +428,6 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	desc := GetAssignmentDesc(page)
 	assignment.Desc = desc
 
+	TaskCount--
 	return assignment
 }
