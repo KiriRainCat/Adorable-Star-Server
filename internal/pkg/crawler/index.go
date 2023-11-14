@@ -112,7 +112,6 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	// Whether using page pool
 	if len(notPool) > 0 && notPool[0] {
 		page = browser.MustIncognito().MustPage().MustSetCookies()
-		PagePoolLoad++
 	} else {
 		page = pagePool.Get(pageCreate).MustSetCookies()
 		PagePoolLoad++
@@ -229,7 +228,6 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	// Get stored course list
 	storedCourses, err := d.GetCoursesByUID(uid)
 	if err != nil {
-		PagePoolLoad--
 		return
 	}
 
@@ -281,7 +279,6 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 
 	// Update fetch time and GPA
 	d.UpdateFetchTimeAndGPA(uid, gpa)
-	PagePoolLoad--
 }
 
 // Store all fetched assignments data to database
