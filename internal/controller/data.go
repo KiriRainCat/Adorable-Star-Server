@@ -4,6 +4,7 @@ import (
 	"adorable-star/internal/service"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,9 +47,17 @@ func (c *DataController) FetchAssignmentDesc(ctx *gin.Context) {
 }
 
 func (c *DataController) GetData(ctx *gin.Context) {
-	// Get courses
+	// Get user jupiter data
 	data, err := c.s.GetData(ctx.GetInt("uid"))
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"code": http.StatusBadRequest,
+				"msg":  "参数错误",
+				"data": nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
 			"msg":  "服务器内部发生错误，请联系开发者",
@@ -95,9 +104,17 @@ func (c *DataController) GetCourse(ctx *gin.Context) {
 		return
 	}
 
-	// Get courses
+	// Get course
 	course, err := c.s.GetCourse(ctx.GetInt("uid"), id)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"code": http.StatusBadRequest,
+				"msg":  "参数错误",
+				"data": nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
 			"msg":  "服务器内部发生错误，请联系开发者",
@@ -114,7 +131,7 @@ func (c *DataController) GetCourse(ctx *gin.Context) {
 }
 
 func (c *DataController) GetAssignments(ctx *gin.Context) {
-	// Get courses
+	// Get assignments
 	assignments, err := c.s.GetAssignments(ctx.GetInt("uid"))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -144,9 +161,17 @@ func (c *DataController) GetAssignment(ctx *gin.Context) {
 		return
 	}
 
-	// Get courses
+	// Get assignment
 	assignment, err := c.s.GetAssignment(id)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"code": http.StatusBadRequest,
+				"msg":  "参数错误",
+				"data": nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
 			"msg":  "服务器内部发生错误，请联系开发者",
@@ -163,7 +188,7 @@ func (c *DataController) GetAssignment(ctx *gin.Context) {
 }
 
 func (c *DataController) GetReport(ctx *gin.Context) {
-	// Get courses
+	// Get report card
 	file, err := c.s.GetReport(ctx.GetInt("uid"))
 	if err != nil {
 		if err.Error() == "fileNotExist" {
@@ -186,7 +211,7 @@ func (c *DataController) GetReport(ctx *gin.Context) {
 }
 
 func (c *DataController) GetMessages(ctx *gin.Context) {
-	// Get courses
+	// Get messages
 	messages, err := c.s.GetMessages(ctx.GetInt("uid"))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -216,9 +241,17 @@ func (c *DataController) GetMessage(ctx *gin.Context) {
 		return
 	}
 
-	// Get courses
+	// Get message
 	message, err := c.s.GetMessage(id)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"code": http.StatusBadRequest,
+				"msg":  "参数错误",
+				"data": nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
 			"msg":  "服务器内部发生错误，请联系开发者",
@@ -246,7 +279,7 @@ func (c *DataController) DeleteMessage(ctx *gin.Context) {
 		return
 	}
 
-	// Get courses
+	// Delete message
 	err := c.s.DeleteMessage(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
