@@ -47,8 +47,17 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 	}
 
 	// Authenticate Request Header
-	claims, err := m.s.VerifyToken(ctx.Request.Header.Get("Token"))
+	claims, err := m.s.VerifyToken(ctx)
 	if err != nil {
+		println(err.Error())
+		if err.Error() == "internalErr" {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "服务器内部发生错误，请联系开发者",
+				"data": nil,
+			})
+			return
+		}
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"code": http.StatusUnauthorized,
 			"msg":  "用户 Token 验证不通过",
