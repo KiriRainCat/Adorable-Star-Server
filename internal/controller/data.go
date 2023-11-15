@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"adorable-star/internal/pkg/response"
 	"adorable-star/internal/service"
 	"net/http"
 	"strconv"
@@ -46,33 +47,6 @@ func (c *DataController) FetchAssignmentDesc(ctx *gin.Context) {
 	})
 }
 
-func (c *DataController) GetData(ctx *gin.Context) {
-	// Get user jupiter data
-	data, err := c.s.GetData(ctx.GetInt("uid"))
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"code": http.StatusBadRequest,
-				"msg":  "参数错误",
-				"data": nil,
-			})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code": http.StatusInternalServerError,
-			"msg":  "服务器内部发生错误，请联系开发者",
-			"data": nil,
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": http.StatusOK,
-		"msg":  "success",
-		"data": data,
-	})
-}
-
 func (c *DataController) GetCourses(ctx *gin.Context) {
 	// Get courses
 	courses, err := c.s.GetCourses(ctx.GetInt("uid"))
@@ -88,7 +62,11 @@ func (c *DataController) GetCourses(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": courses,
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data:      courses,
+		},
 	})
 }
 
@@ -126,7 +104,11 @@ func (c *DataController) GetCourse(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": course,
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data:      course,
+		},
 	})
 }
 
@@ -145,7 +127,11 @@ func (c *DataController) GetAssignments(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": assignments,
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data:      assignments,
+		},
 	})
 }
 
@@ -183,7 +169,11 @@ func (c *DataController) GetAssignment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": assignment,
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data:      assignment,
+		},
 	})
 }
 
@@ -225,7 +215,11 @@ func (c *DataController) GetMessages(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": messages,
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data:      messages,
+		},
 	})
 }
 

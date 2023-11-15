@@ -17,7 +17,6 @@ func DataRoutes(r *gin.RouterGroup) {
 	// Routes
 	g.POST("/fetch", c.FetchData)
 	g.POST("/fetch-desc/:id", c.FetchAssignmentDesc)
-	g.GET("/data", c.GetData)
 	g.GET("/report", c.GetReport)
 	g.GET("/course", c.GetCourses)
 	g.GET("/course/:id", c.GetCourse)

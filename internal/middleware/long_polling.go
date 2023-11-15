@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"adorable-star/internal/dao"
 	"adorable-star/internal/global"
 	"strconv"
 	"time"
@@ -15,15 +16,22 @@ func LongPolling(ctx *gin.Context) {
 		return
 	}
 
-	// If header contains Instant, return data directly
-	if val, err := strconv.ParseBool(ctx.Request.Header.Get("Instant")); val && err == nil {
-		ctx.Next()
-		return
-	}
-
 	// Check if uid from the token is valid
 	if ctx.GetInt("uid") == 0 {
 		ctx.Abort()
+		return
+	}
+
+	// If header contains Instant, return data directly
+	if val, err := strconv.ParseBool(ctx.Request.Header.Get("Instant")); val && err == nil {
+		data, err := dao.Jupiter.GetDataByUID(ctx.GetInt("uid"))
+		if err != nil {
+			ctx.Abort()
+			return
+		}
+		ctx.Set("fetchedAt", data.FetchedAt)
+		ctx.Set("gpa", data.GPA)
+		ctx.Next()
 		return
 	}
 
