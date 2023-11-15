@@ -238,7 +238,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 			// Use update instead of create new course when found same course
 			if storedCourse.Title == course.Title {
 				// When both courses are completely equivalent
-				if strings.Contains(course.LetterGrade, storedCourse.LetterGrade) && strings.Contains(course.PercentGrade, storedCourse.PercentGrade) {
+				if strings.Contains(storedCourse.LetterGrade, course.LetterGrade) && strings.Contains(storedCourse.PercentGrade, course.PercentGrade) {
 					same = true
 					break
 				}

@@ -35,7 +35,7 @@ func GetCourseGrade(page *rod.Page, courseName string, uid int) *model.Course {
 
 	course := &model.Course{Title: courseName, UID: uid}
 
-	el, err := page.Timeout(time.Millisecond * 100).Element("table > tbody > tr.baseline.botline.printblue")
+	el, err := page.Timeout(time.Second).Element("table > tbody > tr.baseline.botline.printblue")
 	if err != nil {
 		return course
 	}
