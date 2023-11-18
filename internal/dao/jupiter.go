@@ -75,6 +75,25 @@ func (*JupiterDAO) UpdateFetchTimeAndGPA(uid int, gpa string) error {
 	return DB.Model(&model.JupiterData{UID: uid}).Where("uid = ?", uid).Updates(map[string]any{"gpa": gpa, "fetched_at": time.Now()}).Error
 }
 
-func (*JupiterDAO) DeleteAssignment(id int) error {
-	return DB.Delete(&model.Assignment{ID: id}).Error
+func (*JupiterDAO) DeleteAssignment(id int, force ...bool) (bool, error) {
+	// If force delete
+	if len(force) > 0 && force[0] {
+		res := DB.Delete(&model.Assignment{ID: id})
+		return res.RowsAffected > 0, res.Error
+	}
+
+	// Go through notfound count check
+	var assignment *model.Assignment
+	err := DB.First(assignment, id).Error
+	if err != nil {
+		return false, err
+	}
+
+	if assignment.NotFound > 2 {
+		res := DB.Delete(&model.Assignment{ID: id})
+		return res.RowsAffected > 0, res.Error
+	}
+
+	err = DB.Model(assignment).Update("not_found", assignment.NotFound+1).Error
+	return false, err
 }
