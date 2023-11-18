@@ -296,6 +296,10 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		var same = false
 		var old *model.Assignment
 		for idx, storedAssignment := range storedAssignments {
+			if storedAssignment == nil {
+				continue
+			}
+
 			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due && storedAssignment.From == assignment.From {
 				old = storedAssignment
