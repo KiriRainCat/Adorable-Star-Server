@@ -24,5 +24,6 @@ func DataRoutes(r *gin.RouterGroup) {
 	g.GET("/assignment/:id", c.GetAssignment)
 	g.GET("/message", c.GetMessages)
 	g.GET("/message/:id", c.GetMessage)
+	g.PUT("/assignment/:id/:status", c.UpdateAssignmentStatus)
 	g.DELETE("/message/:id", c.DeleteMessage)
 }

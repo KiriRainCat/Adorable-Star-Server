@@ -59,6 +59,10 @@ func (*JupiterDAO) UpdateCourse(old *model.Course, course *model.Course) error {
 	return DB.Model(old).Select("*").Updates(course).Error
 }
 
+func (*JupiterDAO) UpdateAssignmentStatus(id int, status int) error {
+	return DB.Model(&model.Assignment{ID: id}).Update("status", status).Error
+}
+
 func (*JupiterDAO) UpdateAssignment(old *model.Assignment, assignment *model.Assignment) error {
 	// Select * to select all columns, because status update can use 0 {Default will not update for gorm}
 	return DB.Model(old).Select("*").Updates(assignment).Error

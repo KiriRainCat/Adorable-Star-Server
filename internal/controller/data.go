@@ -261,6 +261,41 @@ func (c *DataController) GetMessage(ctx *gin.Context) {
 	})
 }
 
+func (c *DataController) UpdateAssignmentStatus(ctx *gin.Context) {
+	// Get query and check if it's empty
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	status, _ := strconv.Atoi(ctx.Param("status"))
+	if id == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数不得为空",
+			"data": nil,
+		})
+		return
+	}
+
+	// Get assignment
+	err := c.s.UpdateAssignmentStatus(id, status)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data:      nil,
+		},
+	})
+}
+
 func (c *DataController) DeleteMessage(ctx *gin.Context) {
 	// Get query and check if it's empty
 	id, _ := strconv.Atoi(ctx.Param("id"))
