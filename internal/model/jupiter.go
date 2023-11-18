@@ -119,11 +119,12 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 				date = strconv.Itoa(int(due.Month())) + "/" + strconv.Itoa(due.Day())
 			}
 			tx.Create(&Message{
-				UID:    o.UID,
-				Type:   1,
-				From:   o.ID,
-				Course: o.From,
-				Msg:    "Due|" + date + "|" + strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()),
+				UID:        o.UID,
+				Type:       1,
+				From:       o.ID,
+				Course:     o.From,
+				Assignment: o.Title,
+				Msg:        "Due|" + date + "|" + strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day()),
 			})
 		}()
 	}
@@ -137,11 +138,12 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 
 			// Insert new message to database
 			tx.Create(&Message{
-				UID:    o.UID,
-				Type:   1,
-				From:   o.ID,
-				Course: o.From,
-				Msg:    "Score|" + score + "|" + o.Score,
+				UID:        o.UID,
+				Type:       1,
+				From:       o.ID,
+				Course:     o.From,
+				Assignment: o.Title,
+				Msg:        "Score|" + score + "|" + o.Score,
 			})
 		}()
 	}
@@ -155,11 +157,12 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 
 			// Insert new message to database
 			tx.Create(&Message{
-				UID:    o.UID,
-				Type:   1,
-				From:   o.ID,
-				Course: o.From,
-				Msg:    "Desc|" + desc + "|" + o.Desc,
+				UID:        o.UID,
+				Type:       1,
+				From:       o.ID,
+				Course:     o.From,
+				Assignment: o.Title,
+				Msg:        "Desc|" + desc + "|" + o.Desc,
 			})
 		}()
 	}
@@ -182,11 +185,12 @@ func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 		due = strconv.Itoa(int(o.Due.Month())) + "/" + strconv.Itoa(o.Due.Day())
 	}
 	tx.Create(&Message{
-		UID:    o.UID,
-		Type:   0,
-		From:   o.ID,
-		Course: o.From,
-		Msg:    due + "|" + o.Title,
+		UID:        o.UID,
+		Type:       0,
+		From:       o.ID,
+		Course:     o.From,
+		Assignment: o.Title,
+		Msg:        due + "|" + o.Title,
 	})
 	return nil
 }
