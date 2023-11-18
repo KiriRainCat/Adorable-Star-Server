@@ -190,7 +190,7 @@ func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 		From:       o.ID,
 		Course:     o.From,
 		Assignment: o.Title,
-		Msg:        due + "|" + o.Title,
+		Msg:        due,
 	})
 	return nil
 }
