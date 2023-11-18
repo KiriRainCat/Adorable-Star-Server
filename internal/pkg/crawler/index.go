@@ -314,14 +314,6 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			}
 		}
 
-		// Delete nonexisting assignments from database
-		for _, assignment := range storedAssignments {
-			if assignment != nil {
-				count++
-				d.DeleteAssignment(assignment.ID)
-			}
-		}
-
 		// Insert or update assignment
 		if !same && assignment.Title != "" {
 			count++
@@ -333,6 +325,14 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			} else {
 				d.UpdateAssignment(old, assignment)
 			}
+		}
+	}
+
+	// Delete nonexisting assignments from database
+	for _, assignment := range storedAssignments {
+		if assignment != nil {
+			count++
+			d.DeleteAssignment(assignment.ID)
 		}
 	}
 
