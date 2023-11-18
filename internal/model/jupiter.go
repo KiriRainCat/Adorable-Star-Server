@@ -208,3 +208,8 @@ func (o *JupiterData) BeforeUpdate(tx *gorm.DB) error {
 	}()
 	return nil
 }
+
+func (o *Assignment) BeforeDelete(tx *gorm.DB) error {
+	tx.Delete(&Message{}, "`from` = ?", o.ID)
+	return nil
+}

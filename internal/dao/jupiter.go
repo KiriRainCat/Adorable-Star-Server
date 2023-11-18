@@ -69,5 +69,8 @@ func (*JupiterDAO) UpdateFetchTimeAndGPA(uid int, gpa string) error {
 		return DB.Model(&model.JupiterData{UID: uid}).Where("uid = ?", uid).Update("fetched_at", time.Now()).Error
 	}
 	return DB.Model(&model.JupiterData{UID: uid}).Where("uid = ?", uid).Updates(map[string]any{"gpa": gpa, "fetched_at": time.Now()}).Error
+}
 
+func (*JupiterDAO) DeleteAssignment(id int) error {
+	return DB.Delete(&model.Assignment{ID: id}).Error
 }

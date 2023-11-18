@@ -295,7 +295,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	for _, assignment := range assignments {
 		var same = false
 		var old *model.Assignment
-		for _, storedAssignment := range storedAssignments {
+		for idx, storedAssignment := range storedAssignments {
 			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due && storedAssignment.From == assignment.From {
 				old = storedAssignment
@@ -305,7 +305,16 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
 					same = true
 				}
+				storedAssignments[idx] = nil
 				break
+			}
+		}
+
+		// Delete nonexisting assignments from database
+		for _, assignment := range storedAssignments {
+			if assignment != nil {
+				count++
+				d.DeleteAssignment(assignment.ID)
 			}
 		}
 
