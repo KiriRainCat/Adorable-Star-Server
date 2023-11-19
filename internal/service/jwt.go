@@ -58,9 +58,9 @@ func (s *TokenService) VerifyToken(ctx *gin.Context) (claims *tokenClaims, err e
 		return nil, errors.New("invalidToken")
 	}
 
-	// Check if valid (If the token does not expire for more than 24 hours, renew token)
+	// Check if valid (If the user is active, renew token)
 	if !t.Valid {
-		if withinLimit(claims.ExpiresAt.Unix(), 3600*24) {
+		if withinLimit(user.ActiveAt.Unix(), 3600*24) {
 			// Renew the token
 			token, err := s.GenerateToken(claims.UID, claims.Status, claims.Email)
 			if err != nil {
