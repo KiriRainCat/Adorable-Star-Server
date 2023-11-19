@@ -18,7 +18,7 @@ type DataService struct {
 }
 
 func (s *DataService) FetchData(uid int) {
-	go crawler.CrawlerJob(uid)
+	crawler.CrawlerJob(uid)
 }
 
 func (s *DataService) FetchAssignmentDesc(uid int, id int) error {
@@ -29,10 +29,8 @@ func (s *DataService) FetchAssignmentDesc(uid int, id int) error {
 	}
 
 	// Start fetching assignment description
-	go func() {
-		assignment := crawler.FetchAssignmentDesc(uid, storedAssignment)
-		crawler.StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
-	}()
+	assignment := crawler.FetchAssignmentDesc(uid, storedAssignment)
+	crawler.StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
 
 	return nil
 }
