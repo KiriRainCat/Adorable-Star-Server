@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"adorable-star/internal/dao"
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/service"
 	"net/http"
@@ -67,7 +68,16 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 		return
 	}
 
+	// Set essential data
+	data, err := dao.Jupiter.GetDataByUID(ctx.GetInt("uid"))
+	if err != nil {
+		ctx.Abort()
+		return
+	}
 	ctx.Set("uid", claims.UID)
+	ctx.Set("fetchedAt", data.FetchedAt)
+	ctx.Set("gpa", data.GPA)
+
 	ctx.Next()
 }
 
