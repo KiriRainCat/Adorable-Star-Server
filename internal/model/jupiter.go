@@ -1,7 +1,6 @@
 package model
 
 import (
-	"adorable-star/internal/global"
 	"strconv"
 	"time"
 
@@ -193,24 +192,6 @@ func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 		Assignment: o.Title,
 		Msg:        due,
 	})
-	return nil
-}
-
-func (o *JupiterData) BeforeUpdate(tx *gorm.DB) error {
-	go func() {
-		time.Sleep(time.Second * 6)
-
-		// Get the matching channel for user
-		channel := global.NotificationChan[o.UID]
-
-		// Empties the channel
-		for len(channel) > 0 {
-			<-channel
-		}
-
-		// Push the new value
-		channel <- []any{o.FetchedAt, o.GPA}
-	}()
 	return nil
 }
 

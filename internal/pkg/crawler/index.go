@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"adorable-star/internal/dao"
-	"adorable-star/internal/global"
 	"adorable-star/internal/model"
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/util"
@@ -30,15 +29,6 @@ func Init() {
 		browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
 	} else {
 		browser = rod.New().MustConnect()
-	}
-
-	// Initialize channels for long polling of data APIs
-	users, err := dao.User.GetUsers()
-	if err != nil {
-		return
-	}
-	for _, user := range users {
-		global.NotificationChan[user.ID] = make(chan []any, 1)
 	}
 
 	// Create page pool for multithreading
