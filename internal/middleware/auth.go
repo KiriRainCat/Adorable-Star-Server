@@ -67,6 +67,7 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
+	ctx.Set("uid", claims.UID)
 
 	// Set essential data
 	data, err := dao.Jupiter.GetDataByUID(ctx.GetInt("uid"))
@@ -74,7 +75,6 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
-	ctx.Set("uid", claims.UID)
 	ctx.Set("fetchedAt", data.FetchedAt)
 	ctx.Set("gpa", data.GPA)
 
