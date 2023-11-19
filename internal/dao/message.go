@@ -16,7 +16,7 @@ func (*MessageDAO) GetByID(id int) (message *model.Message, err error) {
 }
 
 func (*MessageDAO) GetListByUID(uid int) (messages []*model.Message, err error) {
-	err = DB.Find(&messages, "uid = ?", uid).Error
+	err = DB.Order("created_at DESC").Find(&messages, "uid = ?", uid).Error
 	return
 }
 

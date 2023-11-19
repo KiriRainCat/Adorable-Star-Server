@@ -33,12 +33,12 @@ func (*JupiterDAO) GetAssignmentByID(id int) (assignment *model.Assignment, err 
 }
 
 func (*JupiterDAO) GetAssignmentsByUID(uid int) (assignments []*model.Assignment, err error) {
-	err = DB.Where("uid = ?", uid).Find(&assignments).Error
+	err = DB.Order("due DESC").Find(&assignments, "uid = ?", uid).Error
 	return
 }
 
 func (*JupiterDAO) GetAssignmentsByCourseAndUID(uid int, courseTitle string) (assignments []*model.Assignment, err error) {
-	err = DB.Find(&assignments, "uid = ? AND `from` = ?", uid, courseTitle).Error
+	err = DB.Order("due DESC").Find(&assignments, "uid = ? AND `from` = ?", uid, courseTitle).Error
 	return
 }
 
