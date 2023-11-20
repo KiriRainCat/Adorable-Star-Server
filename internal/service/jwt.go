@@ -67,6 +67,7 @@ func (s *TokenService) VerifyToken(ctx *gin.Context) (claims *tokenClaims, err e
 				return nil, errors.New("internalErr")
 			}
 			ctx.Header("New-Token", token)
+			ctx.Header("Access-Control-Expose-Headers", "New-Token")
 		} else {
 			err = errors.New("invalidToken")
 			return
