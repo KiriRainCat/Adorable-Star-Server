@@ -3,6 +3,7 @@ package controller
 import (
 	"adorable-star/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +32,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	}
 
 	// Login
-	token, uid, err := c.s.Login(data.Name, data.Password)
+	token, user, err := c.s.Login(data.Name, data.Password)
 	if err != nil {
 		if err.Error() == "internalErr" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -45,7 +46,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 			ctx.JSON(http.StatusPreconditionRequired, gin.H{
 				"code": http.StatusPreconditionRequired,
 				"msg":  "需要用户添加 Jupiter 数据",
-				"data": uid,
+				"data": user.ID,
 			})
 			return
 		}
@@ -60,15 +61,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": token,
-	})
-}
-
-func (c *AuthController) Logout(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": http.StatusOK,
-		"msg":  "success",
-		"data": nil,
+		"data": token + "|" + strconv.Itoa(user.Status),
 	})
 }
 
@@ -92,6 +85,49 @@ func (c *AuthController) Register(ctx *gin.Context) {
 
 	// Register
 	if err := c.s.Register(data.Email, data.Username, data.Password); err != nil {
+		if err.Error() == "internalErr" {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "服务器内部发生错误，请联系开发者",
+				"data": nil,
+			})
+			return
+		}
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  err.Error(),
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
+func (c *AuthController) ChangePassword(ctx *gin.Context) {
+	type json struct {
+		Password    string `json:"password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+
+	// When queries are empty
+	var data json
+	if ctx.ShouldBind(&data) != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	// Change password
+	err := c.s.ChangePassword(ctx.GetInt("uid"), data.Password, data.NewPassword)
+	if err != nil {
 		if err.Error() == "internalErr" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,

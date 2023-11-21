@@ -38,17 +38,16 @@ func (s *UserService) Register(email string, username string, pwd string) error 
 	return nil
 }
 
-func (s *UserService) Login(name string, pwd string) (token string, uid int, err error) {
+func (s *UserService) Login(name string, pwd string) (token string, user *model.User, err error) {
 	// Find user from DB
-	user, err := s.d.GetUserByUsernameOrEmail(name)
+	user, err = s.d.GetUserByUsernameOrEmail(name)
 	if err != nil {
 		err = errors.New("账户不存在")
 		return
 	}
-	uid = user.ID
 
 	// When pwd does not match
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pwd+config.Config.Server.EncryptSalt)); err != nil {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pwd+config.Config.Server.EncryptSalt)) != nil {
 		err = errors.New("账号或密码错误")
 		return
 	}
@@ -72,6 +71,32 @@ func (s *UserService) Login(name string, pwd string) (token string, uid int, err
 	}
 
 	return
+}
+
+func (s *UserService) ChangePassword(uid int, pwd string, newPwd string) error {
+	// Find user
+	user, err := s.d.GetUserByID(uid)
+	if err != nil {
+		return errors.New("internalErr")
+	}
+
+	// Check whether old password match
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pwd+config.Config.Server.EncryptSalt)) != nil {
+		return errors.New("旧密码不匹配")
+	}
+
+	// Update user password
+	encodedPwd, err := bcrypt.GenerateFromPassword([]byte(newPwd), bcrypt.MinCost)
+	if err != nil {
+		return errors.New("internalErr")
+	}
+
+	err = s.d.UpdatePassword(uid, string(encodedPwd))
+	if err != nil {
+		return errors.New("internalErr")
+	}
+
+	return nil
 }
 
 func (s *UserService) CompleteInfo(uid int, account string, pwd string) error {
