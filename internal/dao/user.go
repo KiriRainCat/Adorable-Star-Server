@@ -53,6 +53,15 @@ func (*UserDAO) UpdatePassword(id int, pwd string) error {
 	return DB.Model(&model.User{ID: id}).Update("password", pwd).Error
 }
 
+func (*UserDAO) UpdateCfbp(id int, cfbp string) error {
+	err := DB.Model(&model.JupiterData{}).Where("uid = ?", id).Update("cfbp_updated_at", time.Now()).Error
+	if err != nil {
+		return err
+	}
+	err = DB.Model(&model.JupiterData{}).Where("uid = ?", id).Update("cfbp", cfbp).Error
+	return err
+}
+
 func (*UserDAO) UpdateStatus(id int, status int) error {
 	return DB.Model((&model.User{ID: id})).Update("status", status).Error
 }

@@ -19,4 +19,5 @@ func AuthRoutes(r *gin.RouterGroup) {
 	g.POST("/complete-info", c.CompleteInfo)
 	g.POST("/register", m.AuthenticateAdmin, c.Register)
 	g.PUT("/password", c.ChangePassword)
+	g.PUT("/cfbp/:cfbp", c.ChangeCfbp)
 }

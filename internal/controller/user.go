@@ -151,6 +151,37 @@ func (c *AuthController) ChangePassword(ctx *gin.Context) {
 	})
 }
 
+func (c *AuthController) ChangeCfbp(ctx *gin.Context) {
+	cfbp := ctx.Param("cfbp")
+
+	// When queries are empty
+	if cfbp == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	// Update cfbp
+	err := c.s.ChangeCfbp(ctx.GetInt("uid"), cfbp)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
 func (c *AuthController) CompleteInfo(ctx *gin.Context) {
 	type json struct {
 		UID      int    `json:"uid" binding:"required"`

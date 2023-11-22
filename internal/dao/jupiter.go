@@ -17,6 +17,12 @@ func (*JupiterDAO) GetDataByUID(uid int) (data *model.JupiterData, err error) {
 	return
 }
 
+func (*JupiterDAO) GetNewestCfbp() (string, error) {
+	var dataList []*model.JupiterData
+	err := DB.Order("cfbp_updated_at DESC").Find(&dataList).Error
+	return dataList[0].Cfbp, err
+}
+
 func (*JupiterDAO) GetCourseByID(id int) (course *model.Course, err error) {
 	err = DB.First(&course, id).Error
 	return

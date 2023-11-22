@@ -5,6 +5,7 @@ import (
 	"adorable-star/internal/model"
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/util"
+	"errors"
 	"strconv"
 	"strings"
 	"sync"
@@ -106,25 +107,32 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 		PagePoolLoad++
 	}
 
-	// Navigate to Jupiter Ed login page
-	err = page.Navigate("https://login.jupitered.com/login/")
-	if err != nil {
-		PagePoolLoad--
-		return
-	}
-
 	// Bypass Cloudflare detection for crawler
 	page.MustEvalOnNewDocument("const newProto = navigator.__proto__;delete newProto.webdriver;navigator.__proto__ = newProto;")
 
-	// TODO: 记得以后再开启 cloudflare 拦截检测
-	// // Check if request blocked by Cloudflare
-	// if strings.Contains(page.MustElement("body").MustText(), "malicious") {
-	// 	dao.Message.Insert(&model.Message{
-	// 		UID:  uid,
-	// 		Type: -1,
-	// 		Msg:  "cfToken",
-	// 	})
-	// }
+	// Add Cloudflare bypass Cookie
+	cfbp, _ := d.GetNewestCfbp()
+	page.MustSetExtraHeaders("Cookie", "cfbp="+cfbp)
+
+	// Navigate to Jupiter Ed login page
+	err = page.Navigate("https://login.jupitered.com/login/")
+	if err != nil {
+		return
+	}
+
+	// Check if request blocked by Cloudflare
+	text := ""
+	rod.Try(func() {
+		text = page.Timeout(time.Second).MustElement("body > div > div").MustText()
+	})
+	if strings.Contains(text, "malicious") {
+		dao.Message.Insert(&model.Message{
+			UID:  uid,
+			Type: -1,
+			Msg:  "cfToken",
+		})
+		return page, errors.New("requestBlocked")
+	}
 
 	return
 }
@@ -157,8 +165,9 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
 	defer func() {
-		pagePool.Put(page)
 		PagePoolLoad--
+		page.MustNavigate("chrome://version/")
+		pagePool.Put(page)
 	}()
 	if err != nil {
 		return
@@ -369,8 +378,9 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
 	defer func() {
-		pagePool.Put(page)
 		PagePoolLoad--
+		page.MustNavigate("chrome://version/")
+		pagePool.Put(page)
 	}()
 	if err != nil {
 		TaskCount--

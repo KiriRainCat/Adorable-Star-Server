@@ -99,6 +99,10 @@ func (s *UserService) ChangePassword(uid int, pwd string, newPwd string) error {
 	return nil
 }
 
+func (s *UserService) ChangeCfbp(uid int, cfbp string) error {
+	return s.d.UpdateCfbp(uid, cfbp)
+}
+
 func (s *UserService) CompleteInfo(uid int, account string, pwd string) error {
 	// Check if user exist or already has Jupiter info
 	_, err := s.d.GetUserByID(uid)

@@ -8,12 +8,14 @@ import (
 )
 
 type JupiterData struct {
-	ID        int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
-	UID       int       `json:"uid,omitempty" gorm:"unique"`
-	Account   string    `json:"account,omitempty"`
-	Password  string    `json:"password,omitempty"`
-	GPA       string    `json:"gpa,omitempty"`
-	FetchedAt time.Time `json:"fetched_at,omitempty"`
+	ID            int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
+	UID           int       `json:"uid,omitempty" gorm:"unique"`
+	Cfbp          string    `json:"cfbp,omitempty"`
+	CfbpUpdatedAt time.Time `json:"cfbp_updated_at,omitempty"`
+	Account       string    `json:"account,omitempty"`
+	Password      string    `json:"password,omitempty"`
+	GPA           string    `json:"gpa,omitempty"`
+	FetchedAt     time.Time `json:"fetched_at,omitempty"`
 }
 
 type Course struct {
