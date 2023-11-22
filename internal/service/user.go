@@ -86,7 +86,7 @@ func (s *UserService) ChangePassword(uid int, pwd string, newPwd string) error {
 	}
 
 	// Update user password
-	encodedPwd, err := bcrypt.GenerateFromPassword([]byte(newPwd), bcrypt.MinCost)
+	encodedPwd, err := bcrypt.GenerateFromPassword([]byte(newPwd+config.Config.Server.EncryptSalt), bcrypt.MinCost)
 	if err != nil {
 		return errors.New("internalErr")
 	}
