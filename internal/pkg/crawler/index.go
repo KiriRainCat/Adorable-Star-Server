@@ -166,7 +166,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	page, err := OpenJupiterPage(uid)
 	defer func() {
 		PagePoolLoad--
-		page.MustNavigate("chrome://version/")
+		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
 	if err != nil {
@@ -379,7 +379,7 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	page, err := OpenJupiterPage(uid)
 	defer func() {
 		PagePoolLoad--
-		page.MustNavigate("chrome://version/")
+		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
 	if err != nil {
