@@ -87,6 +87,7 @@ func CrawlerJob(uid ...int) {
 			// Fetch all data
 			courseList, assignmentsList, gpa, err := FetchData(uid)
 			if err != nil {
+				TaskCount--
 				return
 			}
 
@@ -110,31 +111,36 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	// Bypass Cloudflare detection for crawler
 	page.MustEvalOnNewDocument("const newProto = navigator.__proto__;delete newProto.webdriver;navigator.__proto__ = newProto;")
 
-	// Add Cloudflare bypass Cookie
-	cfbp, _ := d.GetNewestCfbp()
-	page.MustSetExtraHeaders("Cookie", "cfbp="+cfbp)
+	// Try to bypass cloudflare
+	dataList, _ := d.GetNewestCfbp()
+	for i := 0; i < len(dataList); i++ {
+		// Add cloudflare bypass Cookie
+		data := dataList[i]
+		page.MustSetExtraHeaders("Cookie", "cfbp="+data.Cfbp)
 
-	// Navigate to Jupiter Ed login page
-	err = page.Navigate("https://login.jupitered.com/login/")
-	if err != nil {
-		return
-	}
+		// Navigate to Jupiter Ed login page
+		err = page.Navigate("https://login.jupitered.com/login/")
+		if err != nil {
+			return
+		}
 
-	// Check if request blocked by Cloudflare
-	text := ""
-	rod.Try(func() {
-		text = page.Timeout(time.Second).MustElement("body > div > div").MustText()
-	})
-	if strings.Contains(text, "malicious") {
-		dao.Message.Insert(&model.Message{
-			UID:  uid,
-			Type: -1,
-			Msg:  "cfToken",
+		// Check if request blocked by Cloudflare
+		text := ""
+		rod.Try(func() {
+			text = page.Timeout(time.Second).MustElement("body > div > div").MustText()
 		})
-		return page, errors.New("requestBlocked")
+		if !strings.Contains(text, "malicious") {
+			dao.User.UpdateCfbp(data.UID, data.Cfbp)
+			return
+		}
 	}
 
-	return
+	dao.Message.Insert(&model.Message{
+		UID:  uid,
+		Type: -1,
+		Msg:  "cfToken",
+	})
+	return page, errors.New("requestBlocked")
 }
 
 // Verify if a Jupiter Ed account is valid
@@ -378,6 +384,7 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
 	defer func() {
+		TaskCount--
 		PagePoolLoad--
 		page.MustNavigate("about:blank")
 		pagePool.Put(page)
@@ -438,6 +445,5 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	desc := GetAssignmentDesc(page)
 	assignment.Desc = desc
 
-	TaskCount--
 	return assignment
 }
