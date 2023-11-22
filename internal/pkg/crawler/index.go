@@ -219,7 +219,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 	}
 
 	// Fetch GPA and report card image
-	gpa = FetchReportAndGPA(page)
+	gpa = FetchReportAndGPA(page, uid)
 
 	return
 }
@@ -365,7 +365,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 }
 
 // Fetch a student's GPA and report card image
-func FetchReportAndGPA(page *rod.Page) string {
+func FetchReportAndGPA(page *rod.Page, uid int) string {
 	// Navigate to report card page
 	opts, _, err := NavGetOptions(page)
 	if err != nil {
@@ -374,7 +374,7 @@ func FetchReportAndGPA(page *rod.Page) string {
 	opts[5].MustClick()
 
 	// Get GPA and report card image
-	return GetReportCardAndGPA(page, 1)
+	return GetReportCardAndGPA(page, uid)
 }
 
 // Fetch assignment description
