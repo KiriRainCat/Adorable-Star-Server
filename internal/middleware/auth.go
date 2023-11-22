@@ -50,7 +50,6 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 	// Authenticate Request Header
 	claims, err := m.s.VerifyToken(ctx)
 	if err != nil {
-		println(err.Error())
 		if err.Error() == "internalErr" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
@@ -103,6 +102,12 @@ func (m *AuthMiddleware) AuthenticateUserLevel(level int, status int) gin.Handle
 func (m *AuthMiddleware) AuthenticateAdmin(ctx *gin.Context) {
 	// Let PING api to pass
 	if strings.Contains(ctx.Request.URL.String(), "ping") {
+		ctx.Next()
+		return
+	}
+
+	// Let some temporary needed api to pass when password matched
+	if strings.Contains(ctx.Request.URL.String(), "register") && ctx.Request.Header.Get("Admin") == config.Config.Server.AdminAuth {
 		ctx.Next()
 		return
 	}
