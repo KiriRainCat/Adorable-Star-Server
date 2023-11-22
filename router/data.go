@@ -2,6 +2,7 @@ package router
 
 import (
 	"adorable-star/internal/controller"
+	"adorable-star/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +14,7 @@ func DataRoutes(r *gin.RouterGroup) {
 	c := controller.Data
 
 	// Routes
-	g.POST("/fetch", c.FetchData)
+	g.POST("/fetch", middleware.Auth.AuthenticateUserLevel(1, 1), c.FetchData)
 	g.POST("/fetch-desc/:id", c.FetchAssignmentDesc)
 	g.GET("/report", c.GetReport)
 	g.GET("/course", c.GetCourses)

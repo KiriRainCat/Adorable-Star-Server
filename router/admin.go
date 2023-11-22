@@ -17,5 +17,8 @@ func AdminRoutes(r *gin.RouterGroup) {
 	// Routs
 	g.GET("/crawler-load", c.GetCrawlerLoad)
 	g.GET("/crawler-log", c.GetCrawlerLog)
-	g.GET("sql-log", c.GetApiLog)
+	g.GET("/sql-log", c.GetApiLog)
+	g.GET("/user", c.GetUsers)
+	g.PUT("/user/status/:id/:status", c.UpdateUserStatus)
+	g.PUT("/user/password", c.ChangeUserPassword)
 }
