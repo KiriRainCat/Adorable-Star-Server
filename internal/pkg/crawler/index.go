@@ -6,6 +6,8 @@ import (
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/util"
 	"errors"
+	"log"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -123,11 +125,16 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 			if strings.Contains(err.Error(), "ERR_TIMED_OUT") {
 				browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
 
+				// Close browser with proxy
+				cmd := exec.Command("pm2 stop 12") //lint:ignore SA1005 pm2 is global node command
+				output, _ := cmd.Output()
+				log.Println(string(output))
+
 				// Notify developer
 				dao.Message.Insert(&model.Message{
 					UID:  1,
 					Type: -1,
-					Msg:  "browserProxyErr",
+					Msg:  "browserProxyErr|" + string(output),
 				})
 				i--
 				continue
