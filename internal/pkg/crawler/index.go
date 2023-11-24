@@ -58,18 +58,16 @@ func CrawlerJob(uid ...int) {
 	// When single user called api
 	if len(uid) > 0 {
 		// Start job for single user
-		go func() {
-			startedAt := time.Now()
+		startedAt := time.Now()
 
-			// Fetch all data
-			courseList, assignmentsList, gpa, err := FetchData(uid[0])
-			if err != nil {
-				return
-			}
+		// Fetch all data
+		courseList, assignmentsList, gpa, err := FetchData(uid[0])
+		if err != nil {
+			return
+		}
 
-			// Store fetched data to database
-			StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
-		}()
+		// Store fetched data to database
+		StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
 		return
 	}
 
