@@ -17,6 +17,7 @@ server: # 服务器设置
 
 crawler: # 爬虫设置
   browser_socket_url: "ws://127.0.0.1:7999/devtools/browser/bc02fd66-c01b-4a3b-85fa-a3cd912a49a3" # 生产环境浏览器 websocket 链接
+  proxy_browser_socket_url: "ws://127.0.0.1:7998/devtools/browser/bc02fd66-c01b-4a3b-85fa-a3cd912a49a3" # 生产环境浏览器(代理) websocket 链接
   fetch_interval: 30 # 数据抓取间隔 (分钟)
   max_parallel: 10 # 最大浏览器页面并行数
 ```

@@ -15,7 +15,8 @@ type Server struct {
 }
 
 type Crawler struct {
-	BrowserSocketUrl string `mapstructure:"browser_socket_url" json:"browser_socket_url" yaml:"browser_socket_url"`
-	FetchInterval    int    `mapstructure:"fetch_interval" json:"fetch_interval" yaml:"fetch_interval"`
-	MaxParallel      int    `mapstructure:"max_parallel" json:"max_parallel" yaml:"max_parallel"`
+	BrowserSocketUrl      string `mapstructure:"browser_socket_url" json:"browser_socket_url,omitempty" yaml:"browser_socket_url"`
+	ProxyBrowserSocketUrl string `mapstructure:"proxy_browser_socket_url" json:"proxy_browser_socket_url,omitempty" yaml:"proxy_browser_socket_url"`
+	FetchInterval         int    `mapstructure:"fetch_interval" json:"fetch_interval,omitempty" yaml:"fetch_interval"`
+	MaxParallel           int    `mapstructure:"max_parallel" json:"max_parallel,omitempty" yaml:"max_parallel"`
 }

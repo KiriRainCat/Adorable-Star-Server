@@ -27,7 +27,7 @@ var PendingTaskCount int
 func Init() {
 	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
-		browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
+		browser = rod.New().ControlURL(config.Config.Crawler.ProxyBrowserSocketUrl).MustConnect()
 	} else {
 		browser = rod.New().MustConnect()
 	}
@@ -119,6 +119,19 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 		// Navigate to Jupiter Ed login page
 		err = page.Navigate("https://login.jupitered.com/login/")
 		if err != nil {
+			// If browser with proxy failed to load page, return to normal browser
+			if strings.Contains(err.Error(), "ERR_TIMED_OUT") {
+				browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
+
+				// Notify developer
+				dao.Message.Insert(&model.Message{
+					UID:  1,
+					Type: -1,
+					Msg:  "browserProxyErr",
+				})
+				i--
+				continue
+			}
 			return
 		}
 
