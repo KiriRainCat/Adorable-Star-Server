@@ -81,7 +81,6 @@ func CrawlerJob(uid ...int) {
 	for _, user := range users {
 		uid := user.ID
 		go func() {
-			PendingTaskCount++
 			startedAt := time.Now()
 
 			// Fetch all data
@@ -102,7 +101,9 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	if len(notPool) > 0 && notPool[0] {
 		page = browser.MustIncognito().MustPage().MustSetCookies()
 	} else {
+		PendingTaskCount++
 		page = pagePool.Get(pageCreate).MustSetCookies()
+		PendingTaskCount--
 		PagePoolLoad++
 	}
 
@@ -191,7 +192,6 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
-	PendingTaskCount--
 	if err != nil {
 		return
 	}
@@ -396,8 +396,6 @@ func FetchReportAndGPA(page *rod.Page, uid int) string {
 
 // Fetch assignment description
 func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignment {
-	PendingTaskCount++
-
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
 	defer func() {
@@ -405,7 +403,6 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
-	PendingTaskCount--
 	if err != nil {
 		return assignment
 	}
