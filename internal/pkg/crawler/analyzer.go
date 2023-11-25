@@ -92,12 +92,14 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 	var desc string
 	err := rod.Try(func() {
-		desc = page.Timeout(time.Second*2).MustElementR("#mainpage > div", "/Directions/").MustHTML()
+		desc = page.Timeout(time.Second*2).MustElementR("#mainpage > div", "/Directions/").MustElement("div").MustHTML()
 	})
 	if err != nil {
 		return ""
 	}
 
+	desc = strings.ReplaceAll(desc, " style=\"padding:0px 20px; max-width:472px;\"", "")
+	desc = strings.ReplaceAll(desc, "<b>Directions</b><br>", "")
 	return desc
 }
 
