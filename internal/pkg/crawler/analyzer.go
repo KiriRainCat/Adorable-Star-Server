@@ -92,13 +92,13 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 	var desc string
 	err := rod.Try(func() {
-		desc = page.Timeout(time.Second*2).MustElementR("#mainpage > div", "/Directions/").MustText()
+		desc = page.Timeout(time.Second*2).MustElementR("#mainpage > div", "/Directions/").MustHTML()
 	})
 	if err != nil {
 		return ""
 	}
 
-	return strings.Replace(desc, "Directions\n", "", 1)
+	return desc
 }
 
 // Use the current page of report card to crawl GPA and report card image
