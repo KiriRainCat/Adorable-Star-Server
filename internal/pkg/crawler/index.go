@@ -152,6 +152,12 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 		}
 	}
 
+	// Do this when cfbp list have no element
+	err = page.Navigate("https://login.jupitered.com/login/")
+	if err == nil {
+		return
+	}
+
 	dao.Message.Insert(&model.Message{
 		UID:  uid,
 		Type: -1,
