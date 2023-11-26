@@ -6,7 +6,7 @@ import (
 
 type User struct {
 	ID        int       `json:"id,omitempty" gorm:"primaryKey;autoIncrement"`
-	Status    int       `json:"status,omitempty"`
+	Status    int       `json:"status,omitempty" gorm:"default:1"`
 	Email     string    `json:"email,omitempty" gorm:"unique"`
 	Username  string    `json:"username,omitempty" gorm:"unique"`
 	Password  string    `json:"password,omitempty"`
