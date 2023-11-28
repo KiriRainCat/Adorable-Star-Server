@@ -36,7 +36,7 @@ func (s *UserService) SendValidationCode(userMail string) error {
 		return errors.New("internalErr")
 	}
 	if expiration > 120 {
-		return errors.New("验证码仍在5分钟有效期内，没小于2分钟禁止重发")
+		return errors.New("验证码仍在5分钟有效期内 (没小于2分钟禁止重发)")
 	}
 
 	// Generate random code with 6 digits
@@ -83,6 +83,9 @@ func (s *UserService) Register(email string, validationCode string, username str
 		}
 		return errors.New("internalErr")
 	}
+
+	// Remove validation code from Redis
+	dao.Redis.Del("vc-" + email)
 
 	return nil
 }
