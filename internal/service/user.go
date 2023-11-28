@@ -23,18 +23,27 @@ type UserService struct {
 	s *TokenService
 }
 
-func (s *UserService) SendValidationCode(uid int, userMail string) error {
+func (s *UserService) SendValidationCode(userMail string) error {
 	// If user with this email already exist
 	_, err := s.d.GetUserByUsernameOrEmail(userMail)
 	if err == nil {
 		return errors.New("使用此邮箱的账户已经存在")
 	}
 
+	// Check if there's unexpired validation code (3 min)
+	expiration, err := dao.Redis.TTL("vc-" + userMail).Result()
+	if err != nil {
+		return errors.New("internalErr")
+	}
+	if expiration > 120 {
+		return errors.New("验证码仍在5分钟有效期内，没小于2分钟禁止重发")
+	}
+
 	// Generate random code with 6 digits
 	code := int(rand.Float32()*499999) + 100000
 
 	// Put the code into Redis for 5 minute expiration
-	dao.Redis.Set("vc"+strconv.Itoa(uid), code, time.Minute*5)
+	dao.Redis.Set("vc-"+userMail, code, time.Minute*5)
 
 	// Send email with verification code
 	mail := &email.Email{
@@ -50,9 +59,9 @@ func (s *UserService) SendValidationCode(uid int, userMail string) error {
 	)
 }
 
-func (s *UserService) Register(uid int, email string, validationCode string, username string, pwd string) error {
+func (s *UserService) Register(email string, validationCode string, username string, pwd string) error {
 	// Verify verification code
-	val, err := dao.Redis.Get("vc" + strconv.Itoa(uid)).Result()
+	val, err := dao.Redis.Get("vc-" + email).Result()
 	if err != nil {
 		return errors.New("验证码不存在或过期")
 	}

@@ -80,7 +80,7 @@ func (c *AuthController) ValidationCode(ctx *gin.Context) {
 	}
 
 	// Send validation code
-	err := c.s.SendValidationCode(ctx.GetInt("uid"), userMail)
+	err := c.s.SendValidationCode(userMail)
 	if err != nil {
 		if strings.Contains(err.Error(), "internalErr") {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -124,7 +124,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	}
 
 	// Register
-	if err := c.s.Register(ctx.GetInt("uid"), data.Email, data.ValidationCode, data.Username, data.Password); err != nil {
+	if err := c.s.Register(data.Email, data.ValidationCode, data.Username, data.Password); err != nil {
 		if err.Error() == "internalErr" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
