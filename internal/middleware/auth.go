@@ -42,7 +42,8 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 	if strings.Contains(ctx.Request.URL.String(), "ping") ||
 		strings.Contains(ctx.Request.URL.String(), "login") ||
 		strings.Contains(ctx.Request.URL.String(), "register") ||
-		strings.Contains(ctx.Request.URL.String(), "complete-info") {
+		strings.Contains(ctx.Request.URL.String(), "complete-info") ||
+		strings.Contains(ctx.Request.URL.String(), "validation-code") {
 		ctx.Next()
 		return
 	}
@@ -102,12 +103,6 @@ func (m *AuthMiddleware) AuthenticateUserLevel(level int, status int) gin.Handle
 func (m *AuthMiddleware) AuthenticateAdmin(ctx *gin.Context) {
 	// Let PING api to pass
 	if strings.Contains(ctx.Request.URL.String(), "ping") {
-		ctx.Next()
-		return
-	}
-
-	// Let some temporary needed api to pass when password matched
-	if strings.Contains(ctx.Request.URL.String(), "register") && ctx.Request.Header.Get("Admin") == config.Config.Server.AdminAuth {
 		ctx.Next()
 		return
 	}

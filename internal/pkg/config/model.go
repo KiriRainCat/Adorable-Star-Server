@@ -3,6 +3,8 @@ package config
 type Configuration struct {
 	Server  Server  `mapstructure:"server" json:"server" yaml:"server"`
 	Crawler Crawler `mapstructure:"crawler" json:"crawler" yaml:"crawler"`
+	Redis   Redis   `mapstructure:"redis" json:"redis" yaml:"redis"`
+	SMTP    SMTP    `mapstructure:"smtp" json:"smtp" yaml:"smtp"`
 }
 
 type Server struct {
@@ -19,4 +21,18 @@ type Crawler struct {
 	ProxyBrowserSocketUrl string `mapstructure:"proxy_browser_socket_url" json:"proxy_browser_socket_url,omitempty" yaml:"proxy_browser_socket_url"`
 	FetchInterval         int    `mapstructure:"fetch_interval" json:"fetch_interval,omitempty" yaml:"fetch_interval"`
 	MaxParallel           int    `mapstructure:"max_parallel" json:"max_parallel,omitempty" yaml:"max_parallel"`
+}
+
+type Redis struct {
+	Host     string `mapstructure:"host" json:"host,omitempty" yaml:"host"`
+	Port     int    `mapstructure:"port" json:"port,omitempty" yaml:"port"`
+	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password"`
+	DB       int    `mapstructure:"db" json:"db,omitempty" yaml:"db"`
+}
+
+type SMTP struct {
+	Host string `mapstructure:"host" json:"host,omitempty" yaml:"host"`
+	Port int    `mapstructure:"port" json:"port,omitempty" yaml:"port"`
+	Key  string `mapstructure:"key" json:"key,omitempty" yaml:"key"`
+	Mail string `mapstructure:"mail" json:"mail,omitempty" yaml:"mail"`
 }

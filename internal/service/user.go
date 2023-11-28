@@ -6,8 +6,13 @@ import (
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/crawler"
 	"errors"
+	"math/rand"
+	"net/smtp"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/jordan-wright/email"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,8 +23,43 @@ type UserService struct {
 	s *TokenService
 }
 
-func (s *UserService) Register(email string, username string, pwd string) error {
-	// TODO: 实现邮箱验证码
+func (s *UserService) SendValidationCode(uid int, userMail string) error {
+	// If user with this email already exist
+	_, err := s.d.GetUserByUsernameOrEmail(userMail)
+	if err == nil {
+		return errors.New("使用此邮箱的账户已经存在")
+	}
+
+	// Generate random code with 6 digits
+	code := int(rand.Float32()*499999) + 100000
+
+	// Put the code into Redis for 5 minute expiration
+	dao.Redis.Set("vc"+strconv.Itoa(uid), code, time.Minute*5)
+
+	// Send email with verification code
+	mail := &email.Email{
+		From:    "萌媛星 <KiriRainCat@163.com>",
+		To:      []string{userMail},
+		Subject: "验证码 (Validation Code)",
+		Text:    []byte("验证码将在5分钟后失效，请在时效内进行验证\n Validation code will expire in 5 minutes, please validate with in time limit\n\n" + strconv.Itoa(code)),
+	}
+
+	return mail.Send(
+		config.Config.SMTP.Host+":"+strconv.Itoa(config.Config.SMTP.Port),
+		smtp.PlainAuth("", config.Config.SMTP.Mail, config.Config.SMTP.Key, config.Config.SMTP.Host),
+	)
+}
+
+func (s *UserService) Register(uid int, email string, validationCode string, username string, pwd string) error {
+	// Verify verification code
+	val, err := dao.Redis.Get("vc" + strconv.Itoa(uid)).Result()
+	if err != nil {
+		return errors.New("验证码不存在或过期")
+	}
+
+	if val != validationCode {
+		return errors.New("验证码错误")
+	}
 
 	// Encrypt pwd
 	encryptedPwd, err := bcrypt.GenerateFromPassword([]byte(pwd+config.Config.Server.EncryptSalt), bcrypt.MinCost)

@@ -15,7 +15,8 @@ import (
 func main() {
 	// Initialization
 	config.Init()
-	dao.Init()
+	dao.InitDB()
+	dao.InitRedis()
 	crawler.Init()
 	authMiddleware := middleware.Auth
 

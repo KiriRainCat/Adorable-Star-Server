@@ -4,6 +4,7 @@ import (
 	"adorable-star/internal/service"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,11 +66,50 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	})
 }
 
+func (c *AuthController) ValidationCode(ctx *gin.Context) {
+	userMail := ctx.Param("email")
+
+	// When queries are empty
+	if userMail == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "账号或密码错误",
+			"data": nil,
+		})
+		return
+	}
+
+	// Send validation code
+	err := c.s.SendValidationCode(ctx.GetInt("uid"), userMail)
+	if err != nil {
+		if strings.Contains(err.Error(), "internalErr") {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "服务器内部发生错误，请联系开发者",
+				"data": nil,
+			})
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  err.Error(),
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
 func (c *AuthController) Register(ctx *gin.Context) {
 	type json struct {
-		Email    string `json:"email" binding:"required"`
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Email          string `json:"email,omitempty" binding:"required"`
+		ValidationCode string `json:"validation_code,omitempty"`
+		Username       string `json:"username,omitempty" binding:"required"`
+		Password       string `json:"password,omitempty" binding:"required"`
 	}
 
 	// When queries are empty
@@ -84,7 +124,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	}
 
 	// Register
-	if err := c.s.Register(data.Email, data.Username, data.Password); err != nil {
+	if err := c.s.Register(ctx.GetInt("uid"), data.Email, data.ValidationCode, data.Username, data.Password); err != nil {
 		if err.Error() == "internalErr" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
