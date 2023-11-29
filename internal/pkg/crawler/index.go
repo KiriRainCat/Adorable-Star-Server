@@ -90,6 +90,20 @@ func Init() {
 
 // Composite function for fetch and store data from Jupiter for each user
 func CrawlerJob(uid ...int) {
+	if len(uid) == 1 {
+		// Start job for single user
+		startedAt := time.Now()
+
+		// Fetch all data
+		courseList, assignmentsList, gpa, err := FetchData(uid[0])
+		if err != nil {
+			return
+		}
+
+		// Store fetched data to database
+		StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
+	}
+
 	// When specific user ids are passed
 	if len(uid) > 0 {
 		for idx := range uid {
@@ -378,7 +392,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				assignment.CopyFromOther(storedAssignment)
 
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.NotFound == 0 {
 					same = true
 				}
 				storedAssignments[idx] = nil
