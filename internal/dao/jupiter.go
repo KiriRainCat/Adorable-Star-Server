@@ -38,6 +38,11 @@ func (*JupiterDAO) GetAssignmentByID(id int) (assignment *model.Assignment, err 
 	return
 }
 
+func (*JupiterDAO) GetAssignmentByInfo(title string, due *time.Time, from string) (assignment *model.Assignment, err error) {
+	err = DB.Order("desc_fetched_at DESC").First(&assignment, "title = ? AND due = ? AND `from` = ?", title, due, from).Error
+	return
+}
+
 func (*JupiterDAO) GetAssignmentsByUID(uid int) (assignments []*model.Assignment, err error) {
 	err = DB.Order("due DESC").Find(&assignments, "uid = ?", uid).Error
 	return

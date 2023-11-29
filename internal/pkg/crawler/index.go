@@ -42,32 +42,72 @@ func Init() {
 	pagePool.Put(pagePool.Get(pageCreate))
 
 	// Start scheduled crawler job
-	go CrawlerJob()
-	t := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval))
+	go func() {
+		users, err := dao.User.GetActiveUsers()
+		if err != nil {
+			return
+		}
 
-	// For every 30 minutes, fetch jupiter data for user
+		var ids []int
+		for _, user := range users {
+			if user.Status >= 100 {
+				ids = append(ids, user.ID)
+			}
+		}
+
+		go CrawlerJob()
+		go CrawlerJob(ids...)
+	}()
+
+	// For every interval, fetch jupiter data for user
+	t := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval))
 	go func() {
 		for range t.C {
 			go CrawlerJob()
+		}
+	}()
+
+	// For every half interval, fetch jupiter data for higher level user
+	t2 := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval/2))
+	go func() {
+		for range t2.C {
+			users, err := dao.User.GetActiveUsers()
+			if err != nil {
+				return
+			}
+
+			var ids []int
+			for _, user := range users {
+				if user.Status >= 100 {
+					ids = append(ids, user.ID)
+				}
+			}
+
+			go CrawlerJob(ids...)
 		}
 	}()
 }
 
 // Composite function for fetch and store data from Jupiter for each user
 func CrawlerJob(uid ...int) {
-	// When single user called api
+	// When specific user ids are passed
 	if len(uid) > 0 {
-		// Start job for single user
-		startedAt := time.Now()
+		for idx := range uid {
+			id := uid[idx]
+			go func() {
+				// Start job for single user
+				startedAt := time.Now()
 
-		// Fetch all data
-		courseList, assignmentsList, gpa, err := FetchData(uid[0])
-		if err != nil {
-			return
+				// Fetch all data
+				courseList, assignmentsList, gpa, err := FetchData(id)
+				if err != nil {
+					return
+				}
+
+				// Store fetched data to database
+				StoreData(id, gpa, courseList, assignmentsList, &startedAt)
+			}()
 		}
-
-		// Store fetched data to database
-		StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
 		return
 	}
 
@@ -79,6 +119,10 @@ func CrawlerJob(uid ...int) {
 
 	// Loop through and start crawler job for users
 	for _, user := range users {
+		if user.Status >= 100 {
+			continue
+		}
+
 		uid := user.ID
 		go func() {
 			startedAt := time.Now()
@@ -402,6 +446,13 @@ func FetchReportAndGPA(page *rod.Page, uid int) string {
 
 // Fetch assignment description
 func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignment {
+	// Check if there is existing descriptions that's within expiration time
+	storedAssignment, err := dao.Jupiter.GetAssignmentByInfo(assignment.Title, &assignment.Due, assignment.From)
+	if err == nil && time.Now().Unix()-storedAssignment.DescFetchedAt.Unix() < 3600 {
+		assignment.Desc = storedAssignment.Desc
+		return assignment
+	}
+
 	// Get a page to access Jupiter
 	page, err := OpenJupiterPage(uid)
 	defer func() {
@@ -460,6 +511,7 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment) *model.Assignmen
 	// Get assignment desc
 	desc := GetAssignmentDesc(page)
 	assignment.Desc = desc
+	assignment.DescFetchedAt = time.Now()
 
 	return assignment
 }
