@@ -90,12 +90,12 @@ func (*JupiterDAO) DeleteAssignment(id int, force ...bool) (bool, error) {
 
 	// Go through notfound count check
 	var assignment *model.Assignment
-	err := DB.First(assignment, id).Error
+	err := DB.First(&assignment, id).Error
 	if err != nil {
 		return false, err
 	}
 
-	if assignment.NotFound > 2 {
+	if assignment.NotFound > 0 {
 		res := DB.Delete(&model.Assignment{ID: id})
 		return res.RowsAffected > 0, res.Error
 	}
