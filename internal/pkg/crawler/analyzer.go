@@ -26,6 +26,12 @@ func FormatJupiterDueDate(raw string) string {
 	if len(parts[1]) < 2 {
 		parts[1] = "0" + parts[1]
 	}
+
+	// If the date is back in time for 4 month, change the year to next year
+	if month, _ := strconv.Atoi(parts[0]); int(time.Now().Month())-4 > month {
+		return strconv.Itoa(time.Now().Year()+1) + "-" + parts[0] + "-" + parts[1]
+	}
+
 	return strconv.Itoa(time.Now().Year()) + "-" + parts[0] + "-" + parts[1]
 }
 
