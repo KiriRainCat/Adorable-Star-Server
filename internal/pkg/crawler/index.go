@@ -90,6 +90,7 @@ func Init() {
 
 // Composite function for fetch and store data from Jupiter for each user
 func CrawlerJob(uid ...int) {
+	// When specific user ids are passed
 	if len(uid) == 1 {
 		// Start job for single user
 		startedAt := time.Now()
@@ -102,25 +103,19 @@ func CrawlerJob(uid ...int) {
 
 		// Store fetched data to database
 		StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
-	}
+	} else if len(uid) > 0 {
+		for _, id := range uid {
+			// Start job for single user
+			startedAt := time.Now()
 
-	// When specific user ids are passed
-	if len(uid) > 0 {
-		for idx := range uid {
-			id := uid[idx]
-			go func() {
-				// Start job for single user
-				startedAt := time.Now()
+			// Fetch all data
+			courseList, assignmentsList, gpa, err := FetchData(id)
+			if err != nil {
+				return
+			}
 
-				// Fetch all data
-				courseList, assignmentsList, gpa, err := FetchData(id)
-				if err != nil {
-					return
-				}
-
-				// Store fetched data to database
-				StoreData(id, gpa, courseList, assignmentsList, &startedAt)
-			}()
+			// Store fetched data to database
+			StoreData(id, gpa, courseList, assignmentsList, &startedAt)
 		}
 		return
 	}
@@ -391,8 +386,13 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				old = storedAssignment
 				assignment.CopyFromOther(storedAssignment)
 
+				// Reset notfound to 0 when assignment found
+				if storedAssignment.NotFound != 0 {
+					d.UpdateAssignmentNotFound(storedAssignment.ID, 0)
+				}
+
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.NotFound == 0 {
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
 					same = true
 				}
 				storedAssignments[idx] = nil
