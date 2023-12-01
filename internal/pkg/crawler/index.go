@@ -102,6 +102,7 @@ func CrawlerJob(uid ...int) {
 
 		// Store fetched data to database
 		StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
+		return
 	} else if len(uid) > 0 {
 		for _, id := range uid {
 			// Start job for single user
