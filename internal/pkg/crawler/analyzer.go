@@ -89,6 +89,7 @@ func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignmen
 		assignments = append(assignments, assignment)
 	}
 
+	page.Mouse.MustScroll(0, 999999)
 	return
 }
 
