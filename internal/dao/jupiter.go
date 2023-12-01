@@ -61,7 +61,16 @@ func (*JupiterDAO) InsertCourse(course *model.Course) error {
 	return DB.Create(course).Error
 }
 
-func (*JupiterDAO) InsertAssignment(assignment *model.Assignment) error {
+func (dao *JupiterDAO) InsertAssignment(old *model.Assignment, assignment *model.Assignment) error {
+	// Check whether the assignment only changed date
+	storedAssignments, _ := dao.GetAssignmentsByCourseAndUID(assignment.UID, assignment.From)
+	for _, a := range storedAssignments {
+		if a.Title == assignment.Title && a.Desc == assignment.Desc {
+			dao.UpdateAssignment(old, assignment)
+			return nil
+		}
+	}
+
 	return DB.Create(assignment).Error
 }
 

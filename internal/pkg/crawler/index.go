@@ -365,7 +365,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	storedAssignments, _ := d.GetAssignmentsByCourseAndUID(uid, courseTitle)
 
 	// List for new assignments
-	var newAssignments []*model.Assignment
+	var newAssignments [][]*model.Assignment
 
 	// Check if assignment already exist in stored assignment list
 	for _, assignment := range assignments {
@@ -401,7 +401,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			if assignment.ID == 0 {
 				// If assignment is new put it into tmp list
 				if assignment != nil {
-					newAssignments = append(newAssignments, assignment)
+					newAssignments = append(newAssignments, []*model.Assignment{old, assignment})
 				}
 			} else {
 				d.UpdateAssignment(old, assignment)
@@ -421,16 +421,16 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	// Too much new assignments, store them directly without description
 	if len(newAssignments) > 5 {
 		for _, assignment := range newAssignments {
-			d.InsertAssignment(assignment)
+			d.InsertAssignment(assignment[0], assignment[1])
 		}
 	} else {
 		// Asynchronously fetch descriptions and store new assignments
 		for _, assignment := range newAssignments {
 			wg.Add(1)
-			assignmentC := assignment
+			tmp := assignment
 			go func() {
-				assignmentWithDesc := FetchAssignmentDesc(uid, assignmentC)
-				d.InsertAssignment(assignmentWithDesc)
+				assignmentWithDesc := FetchAssignmentDesc(uid, tmp[1])
+				d.InsertAssignment(tmp[0], assignmentWithDesc)
 				wg.Done()
 			}()
 		}
