@@ -104,7 +104,7 @@ func (*JupiterDAO) DeleteAssignment(id int, force ...bool) (bool, error) {
 		return false, err
 	}
 
-	if assignment.NotFound > 4 {
+	if assignment.NotFound > 5 {
 		res := DB.Delete(&model.Assignment{ID: id})
 		return res.RowsAffected > 0, res.Error
 	}
