@@ -83,7 +83,7 @@ func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignmen
 		// Prevent element temporary nil pointer resolving
 		if err != nil {
 			rod.Try(func() {
-				el = page.Timeout(time.Second * 2).MustElement("table > tbody[click*='goassign']:nth-child(" + strconv.Itoa(idx+1) + ") > tr:nth-child(2)")
+				el = page.Timeout(time.Second * 2).MustElement("table > tbody[click*='goassign']:nth-child(" + strconv.Itoa(idx+2) + ") > tr:nth-child(2)")
 				due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(el.Timeout(time.Second*2).MustElement("td:nth-child(2)").MustText()))
 				assignment.Due = due
 				assignment.Title = el.Timeout(time.Second * 2).MustElement("td:nth-child(3)").MustText()
