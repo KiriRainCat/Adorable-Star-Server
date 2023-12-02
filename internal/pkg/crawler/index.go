@@ -378,17 +378,12 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			}
 
 			// Use update instead of create new assignment when found same assignment
-			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due && storedAssignment.From == assignment.From {
+			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due {
 				old = storedAssignment
 				assignment.CopyFromOther(storedAssignment)
 
-				// Reset notfound to 0 when assignment found
-				if storedAssignment.NotFound != 0 {
-					d.UpdateAssignmentNotFound(storedAssignment.ID, 0)
-				}
-
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
+				if storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
 					same = true
 				}
 				storedAssignments[idx] = nil
@@ -413,9 +408,8 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	// Delete nonexisting assignments from database
 	for _, assignment := range storedAssignments {
 		if assignment != nil {
-			if deleted, _ := d.DeleteAssignment(assignment.ID); deleted {
-				count++
-			}
+			d.DeleteAssignment(assignment.ID)
+			count++
 		}
 	}
 

@@ -63,13 +63,15 @@ func (*JupiterDAO) InsertCourse(course *model.Course) error {
 
 func (dao *JupiterDAO) InsertAssignment(old *model.Assignment, assignment *model.Assignment) error {
 	// Check whether the assignment only changed date
-	if old != nil {
-		storedAssignments, _ := dao.GetAssignmentsByCourseAndUID(assignment.UID, assignment.From)
-		for _, a := range storedAssignments {
-			if a.Title == assignment.Title && a.Desc == assignment.Desc && a.Score == assignment.Score {
-				dao.UpdateAssignment(old, assignment)
-				return nil
-			}
+	storedAssignments, _ := dao.GetAssignmentsByCourseAndUID(assignment.UID, assignment.From)
+	for _, a := range storedAssignments {
+		// FIXME: A not so good way of fixing the bug
+		if a.Title == assignment.Title && a.Due == assignment.Due {
+			return nil
+		}
+		if a.Title == assignment.Title && a.Desc == assignment.Desc && a.Score == assignment.Score && old != nil {
+			dao.UpdateAssignment(old, assignment)
+			return nil
 		}
 	}
 
@@ -101,25 +103,7 @@ func (*JupiterDAO) UpdateFetchTimeAndGPA(uid int, gpa string) error {
 	return DB.Model(&model.JupiterData{UID: uid}).Where("uid = ?", uid).Updates(map[string]any{"gpa": gpa, "fetched_at": time.Now()}).Error
 }
 
-func (*JupiterDAO) DeleteAssignment(id int, force ...bool) (bool, error) {
-	// If force delete
-	if len(force) > 0 && force[0] {
-		res := DB.Delete(&model.Assignment{ID: id})
-		return res.RowsAffected > 0, res.Error
-	}
-
-	// Go through notfound count check
-	var assignment *model.Assignment
-	err := DB.First(&assignment, id).Error
-	if err != nil {
-		return false, err
-	}
-
-	if assignment.NotFound > 5 {
-		res := DB.Delete(&model.Assignment{ID: id})
-		return res.RowsAffected > 0, res.Error
-	}
-
-	err = DB.Model(assignment).Update("not_found", assignment.NotFound+1).Error
-	return false, err
+func (*JupiterDAO) DeleteAssignment(id int) (bool, error) {
+	res := DB.Delete(&model.Assignment{ID: id})
+	return res.RowsAffected > 0, res.Error
 }

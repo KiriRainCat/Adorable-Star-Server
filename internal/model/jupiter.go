@@ -36,7 +36,6 @@ type Assignment struct {
 	Title         string    `json:"title,omitempty"`
 	Desc          string    `json:"desc,omitempty"`
 	Score         string    `json:"score,omitempty"`
-	NotFound      int       `json:"not_found,omitempty" gorm:"default:0"`
 	CreatedAt     time.Time `json:"created_at,omitempty"`
 	DescFetchedAt time.Time `json:"desc_fetched_at,omitempty"`
 }
