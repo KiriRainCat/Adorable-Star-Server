@@ -13,7 +13,7 @@ import (
 // Parse raw date "9/2" into something like "2023-09-02"
 func FormatJupiterDueDate(raw string) string {
 	if raw == "" {
-		return ""
+		return "0001-01-01"
 	}
 	if strings.Contains(raw, "-") {
 		return raw
@@ -70,26 +70,30 @@ func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignmen
 	}
 
 	// Get information about each assignment
-	for _, el := range data {
+	for idx, el := range data {
 		assignment := &model.Assignment{UID: uid, From: courseName}
 
-		rod.Try(func() {
-			if date := FormatJupiterDueDate(el.Timeout(time.Second * 2).MustElement("td:nth-child(2)").MustText()); date != "" {
-				due, _ := time.Parse("2006-01-02", date)
-				assignment.Due = due
-			}
-		})
-		rod.Try(func() {
+		err := rod.Try(func() {
+			due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(el.Timeout(time.Second*2).MustElement("td:nth-child(2)").MustText()))
+			assignment.Due = due
 			assignment.Title = el.Timeout(time.Second * 2).MustElement("td:nth-child(3)").MustText()
-		})
-		rod.Try(func() {
 			assignment.Score = el.MustElement("td:nth-child(4)").MustText()
 		})
+
+		// Prevent element temporary nil pointer resolving
+		if err != nil {
+			rod.Try(func() {
+				el = page.Timeout(time.Second * 2).MustElement("table > tbody[click*='goassign']:nth-child(" + strconv.Itoa(idx+1) + ") > tr:nth-child(2)")
+				due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(el.Timeout(time.Second*2).MustElement("td:nth-child(2)").MustText()))
+				assignment.Due = due
+				assignment.Title = el.Timeout(time.Second * 2).MustElement("td:nth-child(3)").MustText()
+				assignment.Score = el.MustElement("td:nth-child(4)").MustText()
+			})
+		}
 
 		assignments = append(assignments, assignment)
 	}
 
-	page.Mouse.MustScroll(0, 999999)
 	return
 }
 
