@@ -103,13 +103,15 @@ func GetAssignmentDesc(page *rod.Page) string {
 
 	var desc string
 	err := rod.Try(func() {
-		desc = page.Timeout(time.Second*2).MustElementR("#mainpage > div", "/Directions/").MustElement("div").MustHTML()
+		desc = page.Timeout(time.Second * 2).MustElement("#mainpage > div[class*='selectable wrap']").MustHTML()
 	})
 	if err != nil {
 		return ""
 	}
 
+	desc = strings.ReplaceAll(desc, " style=\"display:block; max-width:472px; padding:12px 0px 12px 0px\"", "")
 	desc = strings.ReplaceAll(desc, " style=\"padding:0px 20px; max-width:472px;\"", "")
+	desc = strings.ReplaceAll(desc, " style=\"max-width:472px;\"", "")
 	desc = strings.ReplaceAll(desc, "<b>Directions</b><br>", "")
 	return desc
 }

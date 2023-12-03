@@ -16,7 +16,8 @@
     "studid",
     "tbody",
     "topbotline",
-    "touchnavbtn"
+    "touchnavbtn",
+    "whitebox"
   ],
   "files.exclude": {
     "storage": true,
