@@ -2,7 +2,6 @@ package dao
 
 import (
 	"adorable-star/internal/model"
-	"errors"
 	"time"
 )
 
@@ -66,10 +65,6 @@ func (dao *JupiterDAO) InsertAssignment(old *model.Assignment, assignment *model
 	// Check whether the assignment only changed date
 	storedAssignments, _ := dao.GetAssignmentsByCourseAndUID(assignment.UID, assignment.From)
 	for _, a := range storedAssignments {
-		// FIXME: A not so good way of fixing the bug
-		if a.Title == assignment.Title && a.Due == assignment.Due {
-			return errors.New("manualCheckExist")
-		}
 		if a.Title == assignment.Title && a.Desc == assignment.Desc && a.Score == assignment.Score && old != nil {
 			dao.UpdateAssignment(old, assignment)
 			return nil

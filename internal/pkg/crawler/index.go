@@ -408,22 +408,15 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	// Delete nonexisting assignments from database
 	for _, assignment := range storedAssignments {
 		if assignment != nil {
-			d.DeleteAssignment(assignment.ID)
 			count++
+			d.DeleteAssignment(assignment.ID)
 		}
 	}
 
 	// Too much new assignments, store them directly without description
 	if len(newAssignments) > 5 {
 		for _, assignment := range newAssignments {
-			err := d.InsertAssignment(assignment[0], assignment[1])
-
-			// FIXME: This is a workaround to prevent duplicate assignment insertion
-			if err != nil {
-				if err.Error() == "manualCheckExist" {
-					count--
-				}
-			}
+			d.InsertAssignment(assignment[0], assignment[1])
 		}
 	} else {
 		// Asynchronously fetch descriptions and store new assignments
@@ -432,14 +425,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			tmp := assignment
 			go func() {
 				assignmentWithDesc := FetchAssignmentDesc(uid, tmp[1])
-				err := d.InsertAssignment(tmp[0], assignmentWithDesc)
-
-				// FIXME: This is a workaround to prevent duplicate assignment insertion
-				if err != nil {
-					if err.Error() == "manualCheckExist" {
-						count--
-					}
-				}
+				d.InsertAssignment(tmp[0], assignmentWithDesc)
 				wg.Done()
 			}()
 		}
