@@ -36,8 +36,8 @@ func (c *AdminController) GetCrawlerLog(ctx *gin.Context) {
 	})
 }
 
-func (c *AdminController) GetApiLog(ctx *gin.Context) {
-	bytes, err := os.ReadFile("/root/.pm2/logs/adorable-star-out.log")
+func (c *AdminController) GetDbLog(ctx *gin.Context) {
+	bytes, err := os.ReadFile(util.GetCwd() + "/storage/log/db.log")
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
