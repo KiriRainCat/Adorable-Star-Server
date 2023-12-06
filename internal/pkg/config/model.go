@@ -1,10 +1,11 @@
 package config
 
 type Configuration struct {
-	Server  Server  `mapstructure:"server" json:"server" yaml:"server"`
-	Crawler Crawler `mapstructure:"crawler" json:"crawler" yaml:"crawler"`
-	Redis   Redis   `mapstructure:"redis" json:"redis" yaml:"redis"`
-	SMTP    SMTP    `mapstructure:"smtp" json:"smtp" yaml:"smtp"`
+	Server     Server     `mapstructure:"server" json:"server" yaml:"server"`
+	Crawler    Crawler    `mapstructure:"crawler" json:"crawler" yaml:"crawler"`
+	Postgresql Postgresql `mapstructure:"postgresql" json:"postgresql" yaml:"postgresql"`
+	Redis      Redis      `mapstructure:"redis" json:"redis" yaml:"redis"`
+	SMTP       SMTP       `mapstructure:"smtp" json:"smtp" yaml:"smtp"`
 }
 
 type Server struct {
@@ -17,10 +18,18 @@ type Server struct {
 }
 
 type Crawler struct {
-	BrowserSocketUrl      string `mapstructure:"browser_socket_url" json:"browser_socket_url,omitempty" yaml:"browser_socket_url"`
-	ProxyBrowserSocketUrl string `mapstructure:"proxy_browser_socket_url" json:"proxy_browser_socket_url,omitempty" yaml:"proxy_browser_socket_url"`
-	FetchInterval         int    `mapstructure:"fetch_interval" json:"fetch_interval,omitempty" yaml:"fetch_interval"`
-	MaxParallel           int    `mapstructure:"max_parallel" json:"max_parallel,omitempty" yaml:"max_parallel"`
+	ProxyPort     int `mapstructure:"proxy_port" json:"proxy_port,omitempty" yaml:"proxy_port"`
+	FetchInterval int `mapstructure:"fetch_interval" json:"fetch_interval,omitempty" yaml:"fetch_interval"`
+	MaxParallel   int `mapstructure:"max_parallel" json:"max_parallel,omitempty" yaml:"max_parallel"`
+}
+
+type Postgresql struct {
+	DevHost  string `mapstructure:"dev_host" json:"dev_host,omitempty" yaml:"dev_host"`
+	Host     string `mapstructure:"host" json:"host,omitempty" yaml:"host"`
+	Port     int    `mapstructure:"port" json:"port,omitempty" yaml:"port"`
+	DB       string `mapstructure:"db" json:"db,omitempty" yaml:"db"`
+	User     string `mapstructure:"user" json:"user,omitempty" yaml:"user"`
+	Password string `mapstructure:"password" json:"password,omitempty" yaml:"password"`
 }
 
 type Redis struct {

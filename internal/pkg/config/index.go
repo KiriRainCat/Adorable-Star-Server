@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
 
@@ -14,7 +15,11 @@ var Config = &Configuration{}
 func Init() {
 	// Init viper
 	v := viper.New()
-	v.SetConfigFile(util.GetCwd() + "/config/config.yaml")
+	if gin.Mode() == gin.ReleaseMode {
+		v.SetConfigFile(util.GetCwd() + "/config.yaml")
+	} else {
+		v.SetConfigFile(util.GetCwd() + "/config/config.yaml")
+	}
 	v.SetConfigType("yaml")
 
 	// Read config file

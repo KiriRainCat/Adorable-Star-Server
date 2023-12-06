@@ -16,8 +16,27 @@ server: # 服务器设置
   admin_auth: "qwq" # 管理员接口鉴权 (Admin)
 
 crawler: # 爬虫设置
-  browser_socket_url: "ws://127.0.0.1:7999/devtools/browser/bc02fd66-c01b-4a3b-85fa-a3cd912a49a3" # 生产环境浏览器 websocket 链接
-  proxy_browser_socket_url: "ws://127.0.0.1:7998/devtools/browser/bc02fd66-c01b-4a3b-85fa-a3cd912a49a3" # 生产环境浏览器(代理) websocket 链接
+  proxy_port: 20172 # 代理服务器端口 (用于浏览器代理)
   fetch_interval: 30 # 数据抓取间隔 (分钟)
   max_parallel: 10 # 最大浏览器页面并行数
+
+postgresql: # PostgreSQL 数据库设置
+  dev_host: "127.0.0.1" # 开发环境连接地址
+  host: "host" # 连接地址
+  port: 5432 # 端口
+  database: "name" # 数据库名
+  user: "name" # 用户名
+  password: "pwd" # 密码
+
+redis: # Redis 数据库设置
+  host: "host" # 连接地址
+  port: 11813 # 端口
+  password: "pwd" # 密码
+  db: 0 # 默认数据库
+
+smtp: # SMTP 邮件服务设置
+  host: "smtp.host.com" # 连接地址
+  port: 2023 # 端口
+  key: "pwd" # 秘钥
+  mail: "name@host.com" # 邮箱
 ```

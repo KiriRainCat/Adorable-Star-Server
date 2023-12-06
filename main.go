@@ -5,6 +5,7 @@ import (
 	"adorable-star/internal/middleware"
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/crawler"
+	"adorable-star/internal/pkg/util"
 	"adorable-star/router"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 func main() {
 	// Initialization
+	util.EnsureNessesaryDirs()
 	config.Init()
 	dao.InitDB()
 	dao.InitRedis()

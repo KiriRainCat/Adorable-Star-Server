@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 )
 
 var d = dao.Jupiter
@@ -26,9 +27,15 @@ var PendingTaskCount int
 
 // Initialize crawler with page pool to execute tasks asynchronously
 func Init() {
-	// Launch differently in armbian (linux-arm-hf) and windows (dev-env)
 	if gin.Mode() == gin.ReleaseMode {
-		browser = rod.New().ControlURL(config.Config.Crawler.ProxyBrowserSocketUrl).MustConnect()
+		bin, _ := launcher.LookPath()
+		browser = rod.New().ControlURL(
+			launcher.
+				New().
+				Bin(bin).
+				Proxy("localhost:" + strconv.Itoa(config.Config.Crawler.ProxyPort)).
+				MustLaunch()).
+			MustConnect()
 	} else {
 		browser = rod.New().MustConnect()
 	}
@@ -177,7 +184,8 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 			// If browser with proxy failed to load page, return to normal browser
 			if strings.Contains(err.Error(), "ERR_TIMED_OUT") {
 				browser.MustClose()
-				browser = rod.New().ControlURL(config.Config.Crawler.BrowserSocketUrl).MustConnect()
+				bin, _ := launcher.LookPath()
+				browser = rod.New().ControlURL(launcher.New().Bin(bin).MustLaunch()).MustConnect()
 
 				// Notify developer
 				dao.Message.Insert(&model.Message{

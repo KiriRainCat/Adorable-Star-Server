@@ -4,11 +4,14 @@ import (
 	"adorable-star/internal/model"
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/util"
+	"log"
 	"strconv"
 
-	"github.com/glebarez/sqlite"
+	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
@@ -16,21 +19,30 @@ var DB *gorm.DB
 var Redis *redis.Client
 
 func InitDB() {
-	// Open database connection
-	DB, _ = gorm.Open(sqlite.Open(util.GetCwd()+"/storage/db/dev.db"), &gorm.Config{
+	// Build DSN string for PostgreSQL connection
+	dsn := "user=" + config.Config.Postgresql.User +
+		" password=" + config.Config.Postgresql.Password +
+		" port=" + strconv.Itoa(config.Config.Postgresql.Port) +
+		" sslmode=disable" +
+		" TimeZone=Asia/Shanghai"
+
+	if gin.Mode() == gin.ReleaseMode {
+		dsn = dsn + " dbname=" + config.Config.Postgresql.DB + " host=" + config.Config.Postgresql.Host
+	} else {
+		dsn = dsn + " dbname=" + config.Config.Postgresql.DB + "-DEV" + " host=" + config.Config.Postgresql.DevHost
+	}
+
+	// Open database connection with PostgreSQL
+	writer, _ := util.GetFileWriter("storage/log/db.log")
+	DB, _ = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy:         schema.NamingStrategy{SingularTable: true},
 		SkipDefaultTransaction: true,
 		DisableAutomaticPing:   true,
-		PrepareStmt:            true,
+		Logger: logger.New(log.New(writer, "\n", log.LstdFlags), logger.Config{
+			Colorful: false,
+			LogLevel: logger.Info,
+		}),
 	})
-
-	// Use Write-Ahead Logging (WAL) mode
-	DB.Exec("PRAGMA journal_mode=WAL;")
-	DB.Exec("PRAGMA SYNCHRONOUS=NORMAL")
-
-	// Set connection pool size
-	db, _ := DB.DB()
-	db.SetMaxIdleConns(5)
 
 	// Migrate struct model to database
 	DB.AutoMigrate(&model.User{}, &model.JupiterData{}, &model.Course{}, &model.Assignment{}, &model.Message{})
