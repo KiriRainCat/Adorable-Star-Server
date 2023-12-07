@@ -181,21 +181,19 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 		// Navigate to Jupiter Ed login page
 		err = page.Navigate("https://login.jupitered.com/login/")
 		if err != nil {
-			// If browser with proxy failed to load page, return to normal browser
-			if strings.Contains(err.Error(), "ERR_TIMED_OUT") {
-				browser.MustClose()
-				bin, _ := launcher.LookPath()
-				browser = rod.New().ControlURL(launcher.New().Bin(bin).MustLaunch()).MustConnect()
+			// Notify developer
+			dao.Message.Insert(&model.Message{
+				UID:  1,
+				Type: -1,
+				Msg:  "browserProxyErr",
+			})
 
-				// Notify developer
-				dao.Message.Insert(&model.Message{
-					UID:  1,
-					Type: -1,
-					Msg:  "browserProxyErr",
-				})
-				return OpenJupiterPage(uid)
-			}
-			return
+			// If browser with proxy failed to load page, return to normal browser
+			browser.MustClose()
+			bin, _ := launcher.LookPath()
+			browser = rod.New().ControlURL(launcher.New().Bin(bin).MustLaunch()).MustConnect()
+			time.Sleep(time.Second * 10)
+			return OpenJupiterPage(uid)
 		}
 
 		// Check if request blocked by Cloudflare
