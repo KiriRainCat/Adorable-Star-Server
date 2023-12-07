@@ -15,6 +15,7 @@ COPY . .
 
 RUN go build ./main.go
 
+
 # Running the application
 FROM alpine
 
@@ -26,8 +27,6 @@ RUN apk add --no-cache chromium
 WORKDIR /app
 
 COPY --from=builder /build/main /app/main
-
-COPY ./config/config.yaml /app/config.yaml
 
 EXPOSE 8005
 
