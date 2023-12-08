@@ -296,6 +296,25 @@ func (c *DataController) UpdateAssignmentStatus(ctx *gin.Context) {
 	})
 }
 
+func (c *DataController) DeleteAllMessages(ctx *gin.Context) {
+	// Delete messages
+	err := c.s.DeleteAllMessages(ctx.GetInt("uid"))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
 func (c *DataController) DeleteMessage(ctx *gin.Context) {
 	// Get query and check if it's empty
 	id, _ := strconv.Atoi(ctx.Param("id"))

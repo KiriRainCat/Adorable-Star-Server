@@ -96,6 +96,10 @@ func (s *DataService) UpdateAssignmentStatus(id int, status int) error {
 	return dao.Jupiter.UpdateAssignmentStatus(id, status)
 }
 
+func (s *DataService) DeleteAllMessages(uid int) error {
+	return dao.Message.DeleteAll(uid)
+}
+
 func (s *DataService) DeleteMessage(id int) error {
 	return dao.Message.Delete(id)
 }

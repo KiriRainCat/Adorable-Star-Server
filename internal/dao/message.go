@@ -20,6 +20,10 @@ func (*MessageDAO) GetListByUID(uid int) (messages []*model.Message, err error) 
 	return
 }
 
+func (*MessageDAO) DeleteAll(uid int) error {
+	return DB.Delete(&model.Message{}, "uid = ?", uid).Error
+}
+
 func (*MessageDAO) Delete(id int) error {
 	return DB.Delete(&model.Message{}, id).Error
 }
