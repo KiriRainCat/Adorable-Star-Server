@@ -200,7 +200,6 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 			})
 
 			// Switch to browser without proxy
-			pagePool.Put(page)
 			page.MustClose()
 			browser = browserWithoutProxy
 			return OpenJupiterPage(uid)
