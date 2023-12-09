@@ -40,7 +40,7 @@ func InitDB() {
 		DisableAutomaticPing:   true,
 		Logger: logger.New(log.New(writer, "\n", log.LstdFlags), logger.Config{
 			Colorful: false,
-			LogLevel: logger.Info,
+			LogLevel: logger.Warn,
 		}),
 	})
 
