@@ -404,7 +404,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			}
 
 			// Use update instead of create new assignment when found same assignment
-			if storedAssignment.Title == assignment.Title && storedAssignment.Due == assignment.Due {
+			if storedAssignment.Title == assignment.Title && storedAssignment.Due.Year() == assignment.Due.Year() && storedAssignment.Due.Month() == assignment.Due.Month() && storedAssignment.Due.Day() == assignment.Due.Day() {
 				old = storedAssignment
 				assignment.CopyFromOther(storedAssignment)
 
