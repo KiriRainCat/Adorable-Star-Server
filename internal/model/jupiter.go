@@ -179,7 +179,7 @@ func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 	if tx.Where("uid = ?", o.UID).First(&data).Error != nil {
 		return nil
 	}
-	if (data.FetchedAt == time.Time{}) {
+	if data.FetchedAt.Year() == (time.Time{}.Year()) {
 		return nil
 	}
 
