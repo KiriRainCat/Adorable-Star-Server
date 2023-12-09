@@ -76,16 +76,8 @@ func Init() {
 		go CrawlerJob(ids...)
 	}()
 
-	// For every interval, fetch jupiter data for user
-	t := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval))
-	go func() {
-		for range t.C {
-			go CrawlerJob()
-		}
-	}()
-
-	// For every half interval, fetch jupiter data for higher level user
-	t2 := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval/2))
+	// Start scheduled crawler job
+	t2 := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval-5))
 	go func() {
 		for range t2.C {
 			users, err := dao.User.GetActiveUsers()
@@ -101,6 +93,13 @@ func Init() {
 			}
 
 			go CrawlerJob(ids...)
+
+			// Wait for another 5 minutes
+			go func() {
+				time.Sleep(time.Minute * 5)
+				CrawlerJob()
+				t2.Reset(0)
+			}()
 		}
 	}()
 }
