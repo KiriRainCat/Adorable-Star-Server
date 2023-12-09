@@ -24,6 +24,7 @@ var pageCreate func() *rod.Page
 
 var PagePoolLoad int
 var PendingTaskCount int
+var browserRestarting bool
 
 // Initialize crawler with page pool to execute tasks asynchronously
 func Init() {
@@ -157,6 +158,14 @@ func CrawlerJob(uid ...int) {
 
 // Open a webpage for Jupiter
 func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
+	time.Sleep(time.Second*8*time.Duration(rand.Float32()) + 8)
+	for i := 0; i < 1; i++ {
+		if browserRestarting {
+			i--
+			time.Sleep(time.Second * 8)
+		}
+	}
+
 	// Whether using page pool
 	if len(notPool) > 0 && notPool[0] {
 		page = browser.MustIncognito().MustPage().MustSetCookies()
@@ -189,10 +198,14 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 			})
 
 			// If browser with proxy failed to load page, return to normal browser
+			browserRestarting = true
 			browser.MustClose()
 			bin, _ := launcher.LookPath()
 			browser = rod.New().ControlURL(launcher.New().Bin(bin).MustLaunch()).MustConnect()
-			time.Sleep(time.Second * 10)
+			go func() {
+				time.Sleep(time.Second * 8)
+				browserRestarting = false
+			}()
 			return OpenJupiterPage(uid)
 		}
 
