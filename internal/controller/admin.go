@@ -18,6 +18,28 @@ var Admin = &AdminController{}
 type AdminController struct {
 }
 
+func (c *AdminController) SwitchBrowser(ctx *gin.Context) {
+	// Parse params
+	id := ctx.Param("id")
+	i, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	crawler.SwitchBrowser(i)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
 func (c *AdminController) GetCrawlerLog(ctx *gin.Context) {
 	bytes, err := os.ReadFile(util.GetCwd() + "/storage/log/crawler.log")
 	if err != nil {

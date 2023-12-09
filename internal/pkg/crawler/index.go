@@ -105,6 +105,17 @@ func Init() {
 	}()
 }
 
+func SwitchBrowser(id int) {
+	switch id {
+	case 0:
+		browser = browserWithProxy
+	case 1:
+		browser = browserWithoutProxy
+	default:
+		browser = browserWithoutProxy
+	}
+}
+
 // Composite function for fetch and store data from Jupiter for each user
 func CrawlerJob(uid ...int) {
 	// When specific user ids are passed

@@ -15,6 +15,7 @@ func AdminRoutes(r *gin.RouterGroup) {
 	c := controller.Admin
 
 	// Routes
+	g.POST("/switch-browser/:id", c.SwitchBrowser)
 	g.GET("/crawler-load", c.GetCrawlerLoad)
 	g.GET("/crawler-log", c.GetCrawlerLog)
 	g.GET("/db-log", c.GetDbLog)
