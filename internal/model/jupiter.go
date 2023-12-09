@@ -200,6 +200,6 @@ func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 }
 
 func (o *Assignment) BeforeDelete(tx *gorm.DB) error {
-	tx.Delete(&Message{}, "`from` = ?", o.ID)
+	tx.Delete(&Message{}, "\"from\" = ?", o.ID)
 	return nil
 }

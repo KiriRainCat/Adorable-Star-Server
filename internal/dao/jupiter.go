@@ -39,7 +39,7 @@ func (*JupiterDAO) GetAssignmentByID(id int) (assignment *model.Assignment, err 
 }
 
 func (*JupiterDAO) GetAssignmentByInfo(title string, due *time.Time, from string) (assignment *model.Assignment, err error) {
-	err = DB.Order("desc_fetched_at DESC").First(&assignment, "title = ? AND due = ? AND `from` = ?", title, due, from).Error
+	err = DB.Order("desc_fetched_at DESC").First(&assignment, "title = ? AND due = ? AND \"from\" = ?", title, due, from).Error
 	return
 }
 
@@ -49,7 +49,7 @@ func (*JupiterDAO) GetAssignmentsByUID(uid int) (assignments []*model.Assignment
 }
 
 func (*JupiterDAO) GetAssignmentsByCourseAndUID(uid int, courseTitle string) (assignments []*model.Assignment, err error) {
-	err = DB.Order("due DESC").Find(&assignments, "uid = ? AND `from` = ?", uid, courseTitle).Error
+	err = DB.Order("due DESC").Find(&assignments, "uid = ? AND \"from\" = ?", uid, courseTitle).Error
 	return
 }
 
