@@ -36,7 +36,7 @@ func Init() {
 		launcher.
 			New().
 			Bin(bin).
-			Proxy("172.17.0.1:" + strconv.Itoa(config.Config.Crawler.ProxyPort)).
+			Proxy("host.docker.internal:" + strconv.Itoa(config.Config.Crawler.ProxyPort)).
 			MustLaunch()).
 		MustConnect()
 
