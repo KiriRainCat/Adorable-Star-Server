@@ -12,34 +12,44 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 )
 
 var d = dao.Jupiter
 var browser *rod.Browser
+var browserWithProxy *rod.Browser
+var browserWithoutProxy *rod.Browser
 var pagePool rod.PagePool
 var pageCreate func() *rod.Page
 
 var PagePoolLoad int
 var PendingTaskCount int
-var browserRestarting bool
 
 // Initialize crawler with page pool to execute tasks asynchronously
 func Init() {
-	if gin.Mode() == gin.ReleaseMode {
-		bin, _ := launcher.LookPath()
-		browser = rod.New().ControlURL(
-			launcher.
-				New().
-				Bin(bin).
-				Proxy("localhost:" + strconv.Itoa(config.Config.Crawler.ProxyPort)).
-				MustLaunch()).
-			MustConnect()
-	} else {
-		browser = rod.New().MustConnect()
-	}
+	// Find browser executable path
+	bin, _ := launcher.LookPath()
+
+	// With proxy
+	browserWithProxy = rod.New().ControlURL(
+		launcher.
+			New().
+			Bin(bin).
+			Proxy("localhost:" + strconv.Itoa(config.Config.Crawler.ProxyPort)).
+			MustLaunch()).
+		MustConnect()
+
+	// Without proxy
+	browserWithoutProxy = rod.New().ControlURL(
+		launcher.
+			New().
+			Bin(bin).
+			MustLaunch()).
+		MustConnect()
+
+	// Set browser
+	browser = browserWithProxy
 
 	// Create page pool for multithreading
 	pagePool = rod.NewPagePool(config.Config.Crawler.MaxParallel)
@@ -158,14 +168,6 @@ func CrawlerJob(uid ...int) {
 
 // Open a webpage for Jupiter
 func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
-	time.Sleep(time.Second*8*time.Duration(rand.Float32()) + 8)
-	for i := 0; i < 1; i++ {
-		if browserRestarting {
-			i--
-			time.Sleep(time.Second * 8)
-		}
-	}
-
 	// Whether using page pool
 	if len(notPool) > 0 && notPool[0] {
 		page = browser.MustIncognito().MustPage().MustSetCookies()
@@ -197,15 +199,10 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 				Msg:  "browserProxyErr",
 			})
 
-			// If browser with proxy failed to load page, return to normal browser
-			browserRestarting = true
-			browser.MustClose()
-			bin, _ := launcher.LookPath()
-			browser = rod.New().ControlURL(launcher.New().Bin(bin).MustLaunch()).MustConnect()
-			go func() {
-				time.Sleep(time.Second * 8)
-				browserRestarting = false
-			}()
+			// Switch to browser without proxy
+			pagePool.Put(page)
+			page.MustClose()
+			browser = browserWithoutProxy
 			return OpenJupiterPage(uid)
 		}
 
