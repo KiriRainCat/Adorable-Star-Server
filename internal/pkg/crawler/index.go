@@ -98,7 +98,7 @@ func Init() {
 			go func() {
 				time.Sleep(time.Minute * 5)
 				CrawlerJob()
-				t2.Reset(0)
+				t2.Reset(1)
 			}()
 		}
 	}()
