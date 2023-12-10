@@ -93,7 +93,7 @@ func Init() {
 
 			CrawlerJob(ids...)
 			CrawlerJob()
-			t2.Reset(time.Millisecond)
+			t2.Reset(time.Minute * time.Duration(config.Config.Crawler.FetchInterval-5))
 		}
 	}()
 }
