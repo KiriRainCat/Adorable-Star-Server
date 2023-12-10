@@ -19,7 +19,7 @@ func main() {
 	config.Init()
 	dao.InitDB()
 	dao.InitRedis()
-	crawler.Init()
+	go crawler.Init()
 	authMiddleware := middleware.Auth
 
 	// Create gin-engine and base router-group

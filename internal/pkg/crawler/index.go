@@ -56,10 +56,9 @@ func Init() {
 	pageCreate = func() *rod.Page {
 		return browser.MustIncognito().MustPage()
 	}
-	pagePool.Put(pagePool.Get(pageCreate))
 
-	// Start scheduled crawler job
-	go func() {
+	// Immediately start one crawler job
+	{
 		users, err := dao.User.GetActiveUsers()
 		if err != nil {
 			return
@@ -72,9 +71,9 @@ func Init() {
 			}
 		}
 
-		go CrawlerJob()
-		go CrawlerJob(ids...)
-	}()
+		CrawlerJob(ids...)
+		CrawlerJob()
+	}
 
 	// Start scheduled crawler job
 	t2 := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval-5))
@@ -92,14 +91,9 @@ func Init() {
 				}
 			}
 
-			go CrawlerJob(ids...)
-
-			// Wait for another 5 minutes
-			go func() {
-				time.Sleep(time.Minute * 5)
-				CrawlerJob()
-				t2.Reset(1)
-			}()
+			CrawlerJob(ids...)
+			CrawlerJob()
+			t2.Reset(time.Millisecond)
 		}
 	}()
 }
@@ -155,11 +149,13 @@ func CrawlerJob(uid ...int) {
 	}
 
 	// Loop through and start crawler job for users
+	wg := sync.WaitGroup{}
 	for _, user := range users {
 		if user.Status >= 100 {
 			continue
 		}
 
+		wg.Add(1)
 		uid := user.ID
 		go func() {
 			startedAt := time.Now()
@@ -172,8 +168,10 @@ func CrawlerJob(uid ...int) {
 
 			// Store fetched data to database
 			StoreData(uid, gpa, courseList, assignmentsList, &startedAt)
+			wg.Done()
 		}()
 	}
+	wg.Wait()
 }
 
 // Open a webpage for Jupiter
