@@ -117,6 +117,11 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 			// Wait for course to be updated
 			time.Sleep(time.Second * 6)
 
+			// If due date is not changed (Somehow a mysterious bug occured)
+			if due.YearDay() == o.Due.YearDay() {
+				return
+			}
+
 			// Insert new message to database
 			date := "Future"
 			if o.Due.Year() != 1 {
