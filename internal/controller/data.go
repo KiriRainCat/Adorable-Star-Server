@@ -38,7 +38,8 @@ func (c *DataController) FetchAssignmentDesc(ctx *gin.Context) {
 		return
 	}
 
-	c.s.FetchAssignmentDesc(ctx.GetInt("uid"), id)
+	force, _ := strconv.ParseBool(ctx.Query("force"))
+	c.s.FetchAssignmentDesc(ctx.GetInt("uid"), ctx.GetInt("status"), id, force)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
