@@ -406,7 +406,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				assignment.CopyFromOther(storedAssignment)
 
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status {
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.TurnInAble == assignment.TurnInAble {
 					same = true
 				}
 				storedAssignments[idx] = nil
