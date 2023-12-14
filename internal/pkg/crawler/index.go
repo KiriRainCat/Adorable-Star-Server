@@ -447,8 +447,8 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			wg.Add(1)
 			tmp := assignment
 			go func() {
-				assignmentWithDesc := FetchAssignmentDetail(uid, tmp[1])
-				d.InsertAssignment(tmp[0], assignmentWithDesc)
+				assignmentWithDetail := FetchAssignmentDetail(uid, tmp[1])
+				d.InsertAssignment(tmp[0], assignmentWithDetail)
 				wg.Done()
 			}()
 		}
@@ -531,8 +531,12 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	// Find and click the targeted assignment
 	for _, el := range elements {
 		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
-		if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
-			el.MustClick()
+		err = rod.Try(func() {
+			if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
+				el.MustClick()
+			}
+		})
+		if err == nil {
 			break
 		}
 	}
