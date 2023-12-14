@@ -475,7 +475,7 @@ func FetchReportAndGPA(page *rod.Page, uid int) string {
 func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool) *model.Assignment {
 	// Check if there is existing descriptions that's within expiration time
 	storedAssignment, err := dao.Jupiter.GetAssignmentByInfo(assignment.Title, &assignment.Due, assignment.From)
-	if err == nil && time.Now().Unix()-storedAssignment.DescFetchedAt.Unix() < 1800 && len(force) != 0 && !force[0] {
+	if err == nil && time.Now().Unix()-storedAssignment.DescFetchedAt.Unix() < 1800 && (len(force) == 0 || !force[0]) {
 		assignment.Desc = storedAssignment.Desc
 		assignment.TurnInAble = storedAssignment.TurnInAble
 		assignment.TurnInTypes = storedAssignment.TurnInTypes
