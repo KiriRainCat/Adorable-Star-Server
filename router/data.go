@@ -15,7 +15,7 @@ func DataRoutes(r *gin.RouterGroup) {
 
 	// Routes
 	g.POST("/fetch", middleware.Auth.AuthenticateUserLevel(1, 1), c.FetchData)
-	g.POST("/fetch-desc/:id", c.FetchAssignmentDesc)
+	g.POST("/fetch-desc/:id", c.FetchAssignmentDetail)
 
 	g.GET("/report", c.GetReport)
 	g.GET("/course", c.GetCourses)

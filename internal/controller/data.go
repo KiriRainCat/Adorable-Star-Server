@@ -26,7 +26,7 @@ func (c *DataController) FetchData(ctx *gin.Context) {
 	})
 }
 
-func (c *DataController) FetchAssignmentDesc(ctx *gin.Context) {
+func (c *DataController) FetchAssignmentDetail(ctx *gin.Context) {
 	// Get query and check if it's empty
 	id, _ := strconv.Atoi(ctx.Param("id"))
 	if id == 0 {
@@ -39,7 +39,7 @@ func (c *DataController) FetchAssignmentDesc(ctx *gin.Context) {
 	}
 
 	force, _ := strconv.ParseBool(ctx.Query("force"))
-	c.s.FetchAssignmentDesc(ctx.GetInt("uid"), ctx.GetInt("status"), id, force)
+	c.s.FetchAssignmentDetail(ctx.GetInt("uid"), id, force)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,

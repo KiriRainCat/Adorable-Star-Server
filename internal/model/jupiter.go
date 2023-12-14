@@ -28,16 +28,19 @@ type Course struct {
 }
 
 type Assignment struct {
-	ID            int       `json:"id,omitempty" gorm:"primaryKey,autoIncrement"`
-	UID           int       `json:"uid,omitempty"`
-	Status        int       `json:"status,omitempty" gorm:"default:0"` // 常规 [0], 完成 [1], 检索相关数据中 [-1]
-	From          string    `json:"from,omitempty"`
-	Due           time.Time `json:"due,omitempty"`
-	Title         string    `json:"title,omitempty"`
-	Desc          string    `json:"desc,omitempty"`
-	Score         string    `json:"score,omitempty"`
-	CreatedAt     time.Time `json:"created_at,omitempty"`
-	DescFetchedAt time.Time `json:"desc_fetched_at,omitempty"`
+	ID            int        `json:"id,omitempty" gorm:"primaryKey,autoIncrement"`
+	UID           int        `json:"uid,omitempty"`
+	Status        int        `json:"status,omitempty" gorm:"default:0"` // 常规 [0], 完成 [1], 检索相关数据中 [-1]
+	From          string     `json:"from,omitempty"`
+	Due           time.Time  `json:"due,omitempty"`
+	Title         string     `json:"title,omitempty"`
+	Desc          string     `json:"desc,omitempty"`
+	Score         string     `json:"score,omitempty"`
+	TurnInAble    int        `json:"turn_in_able,omitempty"`
+	TurnInTypes   StringList `json:"turn_in_types,omitempty"`
+	TurnInnedList StringList `json:"turn_in_list,omitempty"`
+	CreatedAt     time.Time  `json:"created_at,omitempty"`
+	DescFetchedAt time.Time  `json:"desc_fetched_at,omitempty"`
 }
 
 // Copy all fields from [other] to this course for EMPTY fields
@@ -84,6 +87,15 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 	}
 	if o.Score == "" {
 		o.Score = other.Score
+	}
+	if o.TurnInAble == 0 {
+		o.TurnInAble = other.TurnInAble
+	}
+	if len(o.TurnInTypes) == 0 {
+		o.TurnInTypes = other.TurnInTypes
+	}
+	if len(o.TurnInnedList) == 0 {
+		o.TurnInnedList = other.TurnInnedList
 	}
 }
 

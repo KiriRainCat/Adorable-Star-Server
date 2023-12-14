@@ -447,7 +447,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			wg.Add(1)
 			tmp := assignment
 			go func() {
-				assignmentWithDesc := FetchAssignmentDesc(uid, tmp[1])
+				assignmentWithDesc := FetchAssignmentDetail(uid, tmp[1])
 				d.InsertAssignment(tmp[0], assignmentWithDesc)
 				wg.Done()
 			}()
@@ -472,11 +472,13 @@ func FetchReportAndGPA(page *rod.Page, uid int) string {
 }
 
 // Fetch assignment description
-func FetchAssignmentDesc(uid int, assignment *model.Assignment, force ...bool) *model.Assignment {
+func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool) *model.Assignment {
 	// Check if there is existing descriptions that's within expiration time
 	storedAssignment, err := dao.Jupiter.GetAssignmentByInfo(assignment.Title, &assignment.Due, assignment.From)
 	if err == nil && time.Now().Unix()-storedAssignment.DescFetchedAt.Unix() < 1800 && len(force) != 0 && !force[0] {
 		assignment.Desc = storedAssignment.Desc
+		assignment.TurnInAble = storedAssignment.TurnInAble
+		assignment.TurnInTypes = storedAssignment.TurnInTypes
 		return assignment
 	}
 
@@ -535,9 +537,14 @@ func FetchAssignmentDesc(uid int, assignment *model.Assignment, force ...bool) *
 		}
 	}
 
-	// Get assignment desc
+	// Get assignment details
 	desc := GetAssignmentDesc(page)
 	assignment.Desc = desc
+	assignment.TurnInAble = HasTurnIn(page)
+	if assignment.TurnInAble == 1 {
+		assignment.TurnInTypes = GetTurnInTypes(page)
+		assignment.TurnInnedList = GetTurnInnedList(page)
+	}
 	assignment.DescFetchedAt = time.Now()
 
 	return assignment

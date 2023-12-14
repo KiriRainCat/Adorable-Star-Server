@@ -116,6 +116,67 @@ func GetAssignmentDesc(page *rod.Page) string {
 	return desc
 }
 
+// Check whether the assignment has turn in button
+func HasTurnIn(page *rod.Page) int {
+	WaitStable(page)
+
+	err := rod.Try(func() {
+		page.Timeout(time.Millisecond*200).MustElementR("div.btn", "/^Turn In/")
+	})
+
+	if err == nil {
+		return 1
+	}
+	return -1
+}
+
+// Get turn in able types
+func GetTurnInTypes(page *rod.Page) (list []string) {
+	WaitStable(page)
+
+	err := rod.Try(func() {
+		page.Timeout(time.Millisecond*200).MustElementR("div.btn", "/^Turn In/").MustClick()
+	})
+	if err != nil {
+		return
+	}
+
+	err = rod.Try(func() {
+		page.Timeout(time.Millisecond * 200).MustElement("input[onchange*='uploadfiles(this)']")
+	})
+	if err == nil {
+		list = append(list, "Files")
+	}
+
+	err = rod.Try(func() {
+		page.Timeout(time.Millisecond * 200).MustElement("tr[click*='picknewtext()']")
+	})
+	if err == nil {
+		list = append(list, "Juno Doc")
+	}
+
+	return
+}
+
+// Get the turn inned list
+func GetTurnInnedList(page *rod.Page) (list []string) {
+	WaitStable(page)
+
+	var elList rod.Elements
+	err := rod.Try(func() {
+		page.Timeout(time.Millisecond * 200).MustElements("div[dblclick*='downloadopen(clickval)'] > table > tbody > tr > td:nth-child(2)")
+	})
+	if err != nil {
+		return
+	}
+
+	for _, el := range elList {
+		list = append(list, el.MustText())
+	}
+
+	return
+}
+
 // Use the current page of report card to crawl GPA and report card image
 func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
 	WaitStable(page)

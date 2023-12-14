@@ -21,7 +21,9 @@ func (s *DataService) FetchData(uid int) {
 	crawler.CrawlerJob(uid)
 }
 
-func (s *DataService) FetchAssignmentDesc(uid int, status int, id int, force bool) error {
+func (s *DataService) FetchAssignmentDetail(uid int, id int, force bool) error {
+	// TODO: Limit request count for each user
+
 	// Get assignment data
 	storedAssignment, err := s.d.GetAssignmentByID(id)
 	if err != nil {
@@ -30,10 +32,10 @@ func (s *DataService) FetchAssignmentDesc(uid int, status int, id int, force boo
 
 	// Start fetching assignment description
 	var assignment *model.Assignment
-	if force && status >= 200 { // TODO: All status code should be isolated in a single file
-		assignment = crawler.FetchAssignmentDesc(uid, storedAssignment, true)
+	if force {
+		assignment = crawler.FetchAssignmentDetail(uid, storedAssignment, true)
 	} else {
-		assignment = crawler.FetchAssignmentDesc(uid, storedAssignment)
+		assignment = crawler.FetchAssignmentDetail(uid, storedAssignment)
 	}
 
 	crawler.StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
