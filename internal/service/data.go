@@ -125,7 +125,7 @@ func (s *DataService) TurnInFiles(uid int, id int) error {
 	err = crawler.TurnIn(uid, id, "File", files...)
 
 	// Delete temporary stored files
-	os.RemoveAll(util.GetCwd() + "/storage/tmp" + strconv.Itoa(id))
+	os.RemoveAll(util.GetCwd() + "/storage/tmp" + strconv.Itoa(uid))
 
 	return err
 }
