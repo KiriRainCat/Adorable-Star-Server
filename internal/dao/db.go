@@ -56,7 +56,7 @@ func InitRedis() {
 	})
 
 	_, err := Redis.Ping().Result()
-	if err != nil {
+	if err != nil && gin.Mode() == gin.ReleaseMode {
 		panic(err)
 	}
 }
