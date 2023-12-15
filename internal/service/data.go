@@ -104,6 +104,32 @@ func (s *DataService) UpdateAssignmentStatus(id int, status int) error {
 	return dao.Jupiter.UpdateAssignmentStatus(id, status)
 }
 
+func (s *DataService) TurnInJunoDoc(uid int, id int, text string) error {
+	return crawler.TurnIn(uid, id, "JunoDoc", text)
+}
+
+func (s *DataService) TurnInFiles(uid int, id int) error {
+	// Read user uploaded files
+	entries, err := os.ReadDir(util.GetCwd() + "/storage/tmp" + strconv.Itoa(uid))
+	if err != nil {
+		return err
+	}
+
+	// Getting the file paths
+	var files []string
+	for _, entry := range entries {
+		files = append(files, util.GetCwd()+"/storage/tmp"+strconv.Itoa(uid)+"/"+entry.Name())
+	}
+
+	// Turn in files
+	err = crawler.TurnIn(uid, id, "File", files...)
+
+	// Delete temporary stored files
+	os.RemoveAll(util.GetCwd() + "/storage/tmp" + strconv.Itoa(id))
+
+	return err
+}
+
 func (s *DataService) DeleteAllMessages(uid int) error {
 	return dao.Message.DeleteAll(uid)
 }

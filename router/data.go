@@ -18,11 +18,15 @@ func DataRoutes(r *gin.RouterGroup) {
 	g.POST("/fetch-desc/:id", c.FetchAssignmentDetail)
 
 	g.GET("/report", c.GetReport)
+
 	g.GET("/course", c.GetCourses)
 	g.GET("/course/:id", c.GetCourse)
+
 	g.GET("/assignment", c.GetAssignments)
 	g.GET("/assignment/:id", c.GetAssignment)
 	g.PUT("/assignment/:id/:status", c.UpdateAssignmentStatus)
+	g.POST("/assignment/upload/files/:id", c.UploadFiles)
+	g.POST("/assignment/upload/juno-doc/:id", c.UploadJunoDoc)
 
 	g.GET("/message", c.GetMessages)
 	g.GET("/message/:id", c.GetMessage)

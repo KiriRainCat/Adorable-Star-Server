@@ -7,6 +7,7 @@ import (
 	"adorable-star/internal/pkg/util"
 	"errors"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -301,7 +302,7 @@ func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.
 			idx--
 			continue
 		}
-		if NavNavigate(page, courses[idx]) != nil {
+		if ClickTarget(page, courses[idx]) != nil {
 			idx--
 			continue
 		}
@@ -406,7 +407,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				assignment.CopyFromOther(storedAssignment)
 
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.TurnInAble == assignment.TurnInAble {
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.TurnInAble == assignment.TurnInAble && reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList) {
 					same = true
 				}
 				storedAssignments[idx] = nil
@@ -510,7 +511,7 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	// Navigate to the course the assignment is located
 	for _, course := range courses {
 		if course.MustText() == assignment.From {
-			err = NavNavigate(page, course)
+			err = ClickTarget(page, course)
 			if err != nil {
 				return assignment
 			}
@@ -552,4 +553,137 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	assignment.DescFetchedAt = time.Now()
 
 	return assignment
+}
+
+// Turn in JunoDoc/Files for assignment
+func TurnIn(uid int, id int, turnInType string, files ...string) error {
+	// Get a page to access Jupiter
+	page, err := OpenJupiterPage(uid)
+	defer func() {
+		PagePoolLoad--
+		page.MustNavigate("about:blank")
+		pagePool.Put(page)
+	}()
+	if err != nil {
+		return err
+	}
+
+	// Find user's Jupiter account info
+	data, _ := d.GetDataByUID(uid)
+
+	// Login
+	if err := Login(page, data.Account, data.Password); err != nil {
+		return err
+	}
+
+	// Get courses from nav bar
+	_, courses, err := NavGetOptions(page)
+	if err != nil {
+		return err
+	}
+
+	// Get assignment info from database
+	assignment, err := d.GetAssignmentByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Navigate to the course the assignment is located
+	for _, course := range courses {
+		if course.MustText() == assignment.From {
+			err = ClickTarget(page, course)
+			if err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	// Get course assignments
+	WaitStable(page)
+	var elements rod.Elements
+	err = rod.Try(func() {
+		elements = page.Timeout(time.Second * 2).MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
+	})
+	if err != nil {
+		return err
+	}
+
+	// Find and click the targeted assignment
+	for _, el := range elements {
+		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
+		err = rod.Try(func() {
+			if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
+				el.MustClick()
+			}
+		})
+		if err == nil {
+			break
+		}
+	}
+
+	WaitStable(page)
+
+	// Starting turn in process
+	if turnInType == "JunoDoc" {
+		// Click `Turn In`
+		WaitStable(page)
+		err := rod.Try(func() {
+			page.Timeout(time.Second*2).MustElementR("div.btn", "/^Turn In/").MustClick()
+		})
+		if err != nil {
+			return err
+		}
+
+		// Click `New Juno Doc`
+		err = rod.Try(func() {
+			ClickTarget(page, page.Timeout(time.Millisecond*200).MustElement("tr[click*='picknewtext()']"))
+		})
+		if err != nil {
+			return err
+		}
+
+		// Enter the title and text
+		text := strings.Split(files[0], "|")
+		err = rod.Try(func() {
+			page.Timeout(time.Millisecond * 200).MustElement("#text_title").MustInput(text[0])
+			page.Timeout(time.Millisecond * 200).MustElement("#text_writetext").MustInput(text[1])
+		})
+		if err != nil {
+			return err
+		}
+
+		// Click turn in
+		err = rod.Try(func() {
+			page.Timeout(time.Millisecond*200).MustElementR("div.btn", "/^Turn In/").MustClick()
+		})
+		if err != nil {
+			return err
+		}
+	} else {
+		for _, path := range files {
+			// Click `Turn In`
+			WaitStable(page)
+			err := rod.Try(func() {
+				page.Timeout(time.Second*2).MustElementR("div.btn", "/^Turn In/").MustClick()
+			})
+			if err != nil {
+				return err
+			}
+
+			// Upload file
+			err = rod.Try(func() {
+				page.Timeout(time.Millisecond * 200).MustElement("input[onchange*='uploadfiles(this)']").SetFiles([]string{path})
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Update turn inned list
+	assignment.TurnInnedList = GetTurnInnedList(page)
+	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
+
+	return nil
 }

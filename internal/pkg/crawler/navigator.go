@@ -60,7 +60,7 @@ func NavGetOptions(page *rod.Page) (opts rod.Elements, courses rod.Elements, err
 }
 
 // Navigate to designated target on the nav bar
-func NavNavigate(page *rod.Page, target *rod.Element) error {
+func ClickTarget(page *rod.Page, target *rod.Element) error {
 	WaitStable(page)
 	err := rod.Try(func() {
 		target.Timeout(time.Second * 2).MustClick()

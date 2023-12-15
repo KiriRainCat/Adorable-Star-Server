@@ -3,7 +3,10 @@
     "bord",
     "botline",
     "cfbp",
+    "clickval",
+    "dblclick",
     "dbname",
+    "downloadopen",
     "goassign",
     "jupitered",
     "Leakless",
@@ -11,6 +14,8 @@
     "mainpage",
     "menulist",
     "menuspace",
+    "onchange",
+    "picknewtext",
     "printblue",
     "schoolyearlist",
     "schoolyeartab",
@@ -20,7 +25,9 @@
     "tbody",
     "topbotline",
     "touchnavbtn",
-    "whitebox"
+    "uploadfiles",
+    "whitebox",
+    "writetext"
   ],
   "files.exclude": {
     "storage": true,

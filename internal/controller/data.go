@@ -2,6 +2,7 @@ package controller
 
 import (
 	"adorable-star/internal/pkg/response"
+	"adorable-star/internal/pkg/util"
 	"adorable-star/internal/service"
 	"net/http"
 	"strconv"
@@ -294,6 +295,95 @@ func (c *DataController) UpdateAssignmentStatus(ctx *gin.Context) {
 			GPA:       ctx.GetString("gpa"),
 			Data:      nil,
 		},
+	})
+}
+
+func (c *DataController) UploadJunoDoc(ctx *gin.Context) {
+	type json struct {
+		Text string `json:"text" binding:"required"`
+	}
+
+	// Get query and check if it's empty
+	var data *json
+	if ctx.BindJSON(&data) != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	if id == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	// Turn in JunoDoc to Jupiter Ed
+	if err := c.s.TurnInJunoDoc(ctx.GetInt("uid"), id, data.Text); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "提交失败",
+			"data": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
+func (c *DataController) UploadFiles(ctx *gin.Context) {
+	// Get query and check if it's empty
+	form, err := ctx.MultipartForm()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "文件异常",
+			"data": nil,
+		})
+		return
+	}
+
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	if id == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	// Save files
+	uid := ctx.GetInt("uid")
+	for _, file := range form.File["files"] {
+		ctx.SaveUploadedFile(file, util.GetCwd()+"/storage/tmp"+strconv.Itoa(uid)+"/"+file.Filename)
+	}
+
+	// Turn in files to Jupiter Ed
+	if err := c.s.TurnInFiles(uid, id); err != nil {
+		println(err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "提交失败",
+			"data": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
 	})
 }
 
