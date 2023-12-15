@@ -164,7 +164,7 @@ func GetTurnInnedList(page *rod.Page) (list []string) {
 
 	var elList rod.Elements
 	err := rod.Try(func() {
-		page.Timeout(time.Millisecond * 200).MustElements("div[dblclick*='downloadopen(clickval)'] > table > tbody > tr > td:nth-child(2)")
+		elList = page.Timeout(time.Millisecond * 200).MustElements("div[dblclick*='downloadopen(clickval)'] > table > tbody > tr > td:nth-child(2)")
 	})
 	if err != nil {
 		return
