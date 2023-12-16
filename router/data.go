@@ -27,6 +27,7 @@ func DataRoutes(r *gin.RouterGroup) {
 	g.PUT("/assignment/:id/:status", c.UpdateAssignmentStatus)
 	g.POST("/assignment/upload/files/:id", c.UploadFiles)
 	g.POST("/assignment/upload/juno-doc/:id", c.UploadJunoDoc)
+	g.POST("/assignment/uploaded/:id", c.UnSubmit)
 
 	g.GET("/message", c.GetMessages)
 	g.GET("/message/:id", c.GetMessage)

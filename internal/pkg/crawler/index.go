@@ -239,6 +239,25 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	return page, errors.New("requestBlocked")
 }
 
+// Get a page to that's logged inned already
+func OpenPageAndLogin(uid int) (page *rod.Page, err error) {
+	// Get a page to access Jupiter
+	page, err = OpenJupiterPage(uid)
+	if err != nil {
+		return
+	}
+
+	// Find user's Jupiter account info
+	data, _ := d.GetDataByUID(uid)
+
+	// Login
+	if err := Login(page, data.Account, data.Password); err != nil {
+		return page, err
+	}
+
+	return
+}
+
 // Verify if a Jupiter Ed account is valid
 func VerifyAccount(uid int, account string, pwd string) error {
 	// Open a Jupiter page that's not affected by page pool size
@@ -258,25 +277,14 @@ func VerifyAccount(uid int, account string, pwd string) error {
 
 // Fetch all Jupiter data for a student
 func FetchData(uid int) (courseList []*model.Course, assignmentsList [][]*model.Assignment, gpa string, err error) {
-	// Find user's Jupiter account info
-	data, err := d.GetDataByUID(uid)
-	if err != nil {
-		return
-	}
-
 	// Get a page to access Jupiter
-	page, err := OpenJupiterPage(uid)
+	page, err := OpenPageAndLogin(uid)
 	defer func() {
 		PagePoolLoad--
 		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
 	if err != nil {
-		return
-	}
-
-	// Login
-	if err = Login(page, data.Account, data.Password); err != nil {
 		return
 	}
 
@@ -486,21 +494,13 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	}
 
 	// Get a page to access Jupiter
-	page, err := OpenJupiterPage(uid)
+	page, err := OpenPageAndLogin(uid)
 	defer func() {
 		PagePoolLoad--
 		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
 	if err != nil {
-		return assignment
-	}
-
-	// Find user's Jupiter account info
-	data, _ := d.GetDataByUID(uid)
-
-	// Login
-	if err := Login(page, data.Account, data.Password); err != nil {
 		return assignment
 	}
 
@@ -560,21 +560,13 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 // Turn in JunoDoc/Files for assignment
 func TurnIn(uid int, id int, turnInType string, files ...string) error {
 	// Get a page to access Jupiter
-	page, err := OpenJupiterPage(uid)
+	page, err := OpenPageAndLogin(uid)
 	defer func() {
 		PagePoolLoad--
 		page.MustNavigate("about:blank")
 		pagePool.Put(page)
 	}()
 	if err != nil {
-		return err
-	}
-
-	// Find user's Jupiter account info
-	data, _ := d.GetDataByUID(uid)
-
-	// Login
-	if err := Login(page, data.Account, data.Password); err != nil {
 		return err
 	}
 
@@ -681,6 +673,127 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// Update turn inned list
+	assignment.TurnInnedList = GetTurnInnedList(page)
+	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment}, true)
+
+	return nil
+}
+
+// Un-submit JunoDoc/Files for assignment
+func UnSubmit(uid int, id int, name string) error {
+	// Get a page to access Jupiter
+	page, err := OpenPageAndLogin(uid)
+	defer func() {
+		PagePoolLoad--
+		page.MustNavigate("about:blank")
+		pagePool.Put(page)
+	}()
+	if err != nil {
+		return err
+	}
+
+	// Get nav options
+	opts, _, err := NavGetOptions(page)
+	if err != nil {
+		return err
+	}
+
+	// Go to `My Files`
+	err = ClickTarget(page, opts[2])
+	if err != nil {
+		return err
+	}
+
+	// Show all submitted works
+	err = rod.Try(func() {
+		page.Timeout(time.Millisecond*200).MustElementR("div.btnl", "/^Show All/").MustClick()
+	})
+	if err != nil {
+		return err
+	}
+
+	// Un-submit the targeted work
+	WaitStable(page)
+	assignment, err := d.GetAssignmentByID(id)
+	if err != nil {
+		return err
+	}
+
+	var elList rod.Elements
+	err = rod.Try(func() {
+		elList = page.Timeout(time.Millisecond * 200).MustElements("tr[val]")
+	})
+	if err != nil {
+		return err
+	}
+
+	var target *rod.Element
+	for _, el := range elList {
+		if el.MustElement("td:nth-child(2)").MustText() == name {
+			target = el
+			break
+		}
+	}
+	if target == nil {
+		return errors.New("targetNotFound")
+	}
+
+	// Click `Delete`
+	err = rod.Try(func() {
+		target.MustClick()
+
+		page.WaitStable(time.Millisecond * 100)
+		page.Timeout(time.Millisecond * 200).MustElement("#deletebtn").MustClick()
+
+		page.WaitStable(time.Millisecond * 100)
+		page.Timeout(time.Millisecond * 200).MustElement("#promptdelete > div > div > div[script*='deletefile']").MustClick()
+	})
+	if err != nil {
+		return err
+	}
+
+	//* -------------------- For updating assignment detail -------------------- *//
+	// Get courses from nav bar
+	_, courses, err := NavGetOptions(page)
+	if err != nil {
+		return err
+	}
+
+	// Navigate to the course the assignment is located
+	for _, course := range courses {
+		if course.MustText() == assignment.From {
+			err = ClickTarget(page, course)
+			if err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	// Get course assignments
+	WaitStable(page)
+	var elements rod.Elements
+	err = rod.Try(func() {
+		elements = page.Timeout(time.Second * 2).MustElements("table > tbody[click*='goassign'] > tr:nth-child(2)")
+	})
+	if err != nil {
+		return err
+	}
+
+	// Find and click the targeted assignment
+	for _, el := range elements {
+		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
+		err = rod.Try(func() {
+			if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
+				el.MustClick()
+			}
+		})
+		if err == nil {
+			break
 		}
 	}
 

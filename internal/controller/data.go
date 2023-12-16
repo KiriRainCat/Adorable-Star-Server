@@ -394,6 +394,41 @@ func (c *DataController) UploadFiles(ctx *gin.Context) {
 	})
 }
 
+func (c *DataController) UnSubmit(ctx *gin.Context) {
+	type json struct {
+		Name string `json:"name" binding:"required"`
+	}
+
+	// Get query and check if it's empty
+	var data *json
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	if ctx.BindJSON(&data) != nil || id == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数错误",
+			"data": nil,
+		})
+		return
+	}
+
+	//
+	err := c.s.UnSubmit(ctx.GetInt("uid"), id, data.Name)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": nil,
+	})
+}
+
 func (c *DataController) DeleteAllMessages(ctx *gin.Context) {
 	// Delete messages
 	err := c.s.DeleteAllMessages(ctx.GetInt("uid"))

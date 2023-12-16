@@ -130,6 +130,10 @@ func (s *DataService) TurnInFiles(uid int, id int) error {
 	return err
 }
 
+func (s *DataService) UnSubmit(uid int, id int, name string) error {
+	return crawler.UnSubmit(uid, id, name)
+}
+
 func (s *DataService) DeleteAllMessages(uid int) error {
 	return dao.Message.DeleteAll(uid)
 }
