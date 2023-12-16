@@ -636,6 +636,7 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 		}
 
 		// Click `New Juno Doc`
+		page.WaitStable(time.Millisecond * 100)
 		err = rod.Try(func() {
 			page.Timeout(time.Millisecond * 200).MustElement("tr[click*='picknewtext()']").MustClick()
 		})
@@ -673,6 +674,7 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 			}
 
 			// Upload file
+			page.WaitStable(time.Millisecond * 100)
 			err = rod.Try(func() {
 				page.Timeout(time.Millisecond * 200).MustElement("input[onchange*='uploadfiles(this)']").SetFiles([]string{path})
 			})
