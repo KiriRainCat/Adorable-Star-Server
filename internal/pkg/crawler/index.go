@@ -624,8 +624,6 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 		}
 	}
 
-	WaitStable(page)
-
 	// Starting turn in process
 	if turnInType == "JunoDoc" {
 		// Click `Turn In`
@@ -638,16 +636,19 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 		}
 
 		// Click `New Juno Doc`
+		page.MustScreenshot(util.GetCwd() + "/storage/img/" + time.Now().String() + ".png")
 		err = rod.Try(func() {
 			page.Timeout(time.Millisecond * 200).MustElement("tr[click*='picknewtext()']").MustClick()
 		})
 		if err != nil {
 			return err
 		}
+		page.MustScreenshot(util.GetCwd() + "/storage/img/" + time.Now().String() + ".png")
 		WaitStable(page)
 
 		// Enter the title and text
 		text := strings.Split(files[0], "|")
+		page.MustScreenshot(util.GetCwd() + "/storage/img/" + time.Now().String() + ".png")
 		err = rod.Try(func() {
 			page.Timeout(time.Millisecond * 200).MustElement("#text_title").MustInput(text[0])
 			page.Timeout(time.Millisecond * 200).MustElement("#text_writetext").MustInput(text[1])
