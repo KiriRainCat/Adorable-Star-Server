@@ -40,7 +40,14 @@ func (c *DataController) FetchAssignmentDetail(ctx *gin.Context) {
 	}
 
 	force, _ := strconv.ParseBool(ctx.Query("force"))
-	c.s.FetchAssignmentDetail(ctx.GetInt("uid"), id, force)
+	err := c.s.FetchAssignmentDetail(ctx.GetInt("uid"), id, force)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": err.Error(),
+		})
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,

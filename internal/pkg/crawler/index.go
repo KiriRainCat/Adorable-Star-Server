@@ -382,7 +382,7 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 }
 
 // Store all fetched assignments data to database
-func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment) int {
+func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment, isSingle ...bool) int {
 	var count = 0
 	wg := &sync.WaitGroup{}
 
@@ -430,10 +430,12 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	}
 
 	// Delete nonexisting assignments from database
-	for _, assignment := range storedAssignments {
-		if assignment != nil {
-			count++
-			d.DeleteAssignment(assignment.ID)
+	if len(isSingle) == 0 {
+		for _, assignment := range storedAssignments {
+			if assignment != nil {
+				count++
+				d.DeleteAssignment(assignment.ID)
+			}
 		}
 	}
 
@@ -647,7 +649,7 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 		// Enter the title and text
 		text := strings.Split(files[0], "|")
 		err = rod.Try(func() {
-			page.Timeout(time.Second * 5).MustElement("#text_title").MustInput(text[0])
+			page.Timeout(time.Millisecond * 200).MustElement("#text_title").MustInput(text[0])
 			page.Timeout(time.Millisecond * 200).MustElement("#text_writetext").MustInput(text[1])
 		})
 		if err != nil {
@@ -684,7 +686,7 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 
 	// Update turn inned list
 	assignment.TurnInnedList = GetTurnInnedList(page)
-	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
+	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment}, true)
 
 	return nil
 }

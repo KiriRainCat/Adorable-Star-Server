@@ -38,7 +38,7 @@ func (s *DataService) FetchAssignmentDetail(uid int, id int, force bool) error {
 		assignment = crawler.FetchAssignmentDetail(uid, storedAssignment)
 	}
 
-	crawler.StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
+	crawler.StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment}, true)
 
 	return nil
 }
