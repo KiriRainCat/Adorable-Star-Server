@@ -637,11 +637,12 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 
 		// Click `New Juno Doc`
 		err = rod.Try(func() {
-			ClickTarget(page, page.Timeout(time.Millisecond*200).MustElement("tr[click*='picknewtext()']"))
+			page.Timeout(time.Millisecond * 200).MustElement("tr[click*='picknewtext()']").MustClick()
 		})
 		if err != nil {
 			return err
 		}
+		WaitStable(page)
 
 		// Enter the title and text
 		text := strings.Split(files[0], "|")
