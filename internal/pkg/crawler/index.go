@@ -682,7 +682,6 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 	}
 
 	// Update turn inned list
-	time.Sleep(time.Millisecond * 500)
 	assignment.TurnInnedList = GetTurnInnedList(page)
 	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment})
 
