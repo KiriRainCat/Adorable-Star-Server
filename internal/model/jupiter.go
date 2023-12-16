@@ -36,7 +36,7 @@ type Assignment struct {
 	Title         string     `json:"title,omitempty"`
 	Desc          string     `json:"desc,omitempty"`
 	Score         string     `json:"score,omitempty"`
-	TurnInAble    int        `json:"turn_in_able,omitempty"`
+	TurnInAble    int        `json:"turn_in_able,omitempty" gorm:"default:0"`
 	TurnInTypes   StringList `json:"turn_in_types,omitempty"`
 	TurnInnedList StringList `json:"turn_in_list,omitempty"`
 	CreatedAt     time.Time  `json:"created_at,omitempty"`

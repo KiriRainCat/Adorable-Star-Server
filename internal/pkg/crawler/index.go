@@ -647,7 +647,7 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 		// Enter the title and text
 		text := strings.Split(files[0], "|")
 		err = rod.Try(func() {
-			page.Timeout(time.Millisecond * 200).MustElement("#text_title").MustInput(text[0])
+			page.Timeout(time.Second * 5).MustElement("#text_title").MustInput(text[0])
 			page.Timeout(time.Millisecond * 200).MustElement("#text_writetext").MustInput(text[1])
 		})
 		if err != nil {
