@@ -47,6 +47,7 @@ func (c *DataController) FetchAssignmentDetail(ctx *gin.Context) {
 			"msg":  "服务器内部发生错误，请联系开发者",
 			"data": err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{

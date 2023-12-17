@@ -534,12 +534,21 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	// Find and click the targeted assignment
 	for _, el := range elements {
 		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
-		err = rod.Try(func() {
-			if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
-				el.MustClick()
-			}
+
+		var title, dueDate string
+		err := rod.Try(func() {
+			title = el.MustElement(":nth-child(3)").MustText()
+			dueDate = el.MustElement(":nth-child(2)").MustText()
 		})
-		if err == nil {
+		if err != nil {
+			return assignment
+		}
+
+		if strings.Contains(title, assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(dueDate, due)) {
+			err := rod.Try(func() { el.MustClick() })
+			if err != nil {
+				return assignment
+			}
 			break
 		}
 	}
@@ -548,6 +557,7 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	desc := GetAssignmentDesc(page)
 	assignment.Desc = desc
 	assignment.TurnInAble = HasTurnIn(page)
+	page.WaitStable(time.Millisecond * 100)
 	if assignment.TurnInAble == 1 {
 		assignment.TurnInTypes = GetTurnInTypes(page)
 		assignment.TurnInnedList = GetTurnInnedList(page)
@@ -606,12 +616,21 @@ func TurnIn(uid int, id int, turnInType string, files ...string) error {
 	// Find and click the targeted assignment
 	for _, el := range elements {
 		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
-		err = rod.Try(func() {
-			if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
-				el.MustClick()
-			}
+
+		var title, dueDate string
+		err := rod.Try(func() {
+			title = el.MustElement(":nth-child(3)").MustText()
+			dueDate = el.MustElement(":nth-child(2)").MustText()
 		})
-		if err == nil {
+		if err != nil {
+			return err
+		}
+
+		if strings.Contains(title, assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(dueDate, due)) {
+			err := rod.Try(func() { el.MustClick() })
+			if err != nil {
+				return err
+			}
 			break
 		}
 	}
@@ -787,12 +806,21 @@ func UnSubmit(uid int, id int, name string) error {
 	// Find and click the targeted assignment
 	for _, el := range elements {
 		due := strconv.Itoa(int(assignment.Due.Month())) + "/" + strconv.Itoa(assignment.Due.Day())
-		err = rod.Try(func() {
-			if strings.Contains(el.MustElement(":nth-child(3)").MustText(), assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(el.MustElement(":nth-child(2)").MustText(), due)) {
-				el.MustClick()
-			}
+
+		var title, dueDate string
+		err := rod.Try(func() {
+			title = el.MustElement(":nth-child(3)").MustText()
+			dueDate = el.MustElement(":nth-child(2)").MustText()
 		})
-		if err == nil {
+		if err != nil {
+			return err
+		}
+
+		if strings.Contains(title, assignment.Title) && (assignment.Due.Year() == 1 || strings.Contains(dueDate, due)) {
+			err := rod.Try(func() { el.MustClick() })
+			if err != nil {
+				return err
+			}
 			break
 		}
 	}

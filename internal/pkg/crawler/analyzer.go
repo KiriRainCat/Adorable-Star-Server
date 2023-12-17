@@ -127,6 +127,7 @@ func HasTurnIn(page *rod.Page) int {
 	if err == nil {
 		return 1
 	}
+
 	return -1
 }
 
