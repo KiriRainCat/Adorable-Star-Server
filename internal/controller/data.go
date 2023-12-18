@@ -220,6 +220,36 @@ func (c *DataController) GetAssignment(ctx *gin.Context) {
 	})
 }
 
+func (c *DataController) GetFeedBackImage(ctx *gin.Context) {
+	// Get query and check if it's empty
+	id, _ := strconv.Atoi(ctx.Param("id"))
+	if id == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "参数不得为空",
+			"data": nil,
+		})
+		return
+	}
+
+	// Get feedback image
+	file, err := c.s.GetFeedBackImage(ctx.GetInt("uid"), id)
+	if err != nil {
+		if err.Error() == "fileNotExist" {
+			ctx.Writer.WriteString("")
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.Writer.WriteString(string(file))
+}
+
 func (c *DataController) GetReport(ctx *gin.Context) {
 	// Get report card
 	file, err := c.s.GetReport(ctx.GetInt("uid"))

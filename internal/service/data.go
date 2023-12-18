@@ -90,6 +90,14 @@ func (s *DataService) GetReport(uid int) (file []byte, err error) {
 	return
 }
 
+func (s *DataService) GetFeedBackImage(uid int, id int) (file []byte, err error) {
+	file, err = os.ReadFile(util.GetCwd() + "/storage/" + strconv.Itoa(uid) + "/feedback/" + strconv.Itoa(id) + ".png")
+	if os.IsNotExist(err) {
+		err = errors.New("fileNotExist")
+	}
+	return
+}
+
 func (s *DataService) GetMessages(uid int) (messages []*model.Message, err error) {
 	messages, err = dao.Message.GetListByUID(uid)
 	return
