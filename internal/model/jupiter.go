@@ -98,6 +98,9 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 	if len(o.TurnInnedList) == 0 {
 		o.TurnInnedList = other.TurnInnedList
 	}
+	if o.FeedBack == "" {
+		o.FeedBack = other.FeedBack
+	}
 }
 
 func (o *Course) BeforeUpdate(tx *gorm.DB) error {
