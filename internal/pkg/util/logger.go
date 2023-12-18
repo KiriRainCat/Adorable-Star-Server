@@ -8,7 +8,7 @@ import (
 )
 
 func Log(scope string, format string, v ...any) {
-	writer, _ := GetFileWriter("storage/log/" + scope + ".log")
+	writer, _ := GetFileWriter("log/" + scope + ".log")
 	defer writer.Close()
 
 	if gin.Mode() != gin.ReleaseMode {

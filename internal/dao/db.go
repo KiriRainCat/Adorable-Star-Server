@@ -33,7 +33,7 @@ func InitDB() {
 	}
 
 	// Open database connection with PostgreSQL
-	writer, _ := util.GetFileWriter("storage/log/db.log")
+	writer, _ := util.GetFileWriter("log/db.log")
 	DB, _ = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy:         schema.NamingStrategy{SingularTable: true},
 		SkipDefaultTransaction: true,
