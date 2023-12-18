@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"adorable-star/internal/pkg/crawler"
 	"adorable-star/internal/pkg/response"
 	"adorable-star/internal/pkg/util"
 	"adorable-star/internal/service"
@@ -14,7 +15,6 @@ import (
 var Data = &DataController{service.Data}
 
 // Rate limiter lists
-var fetchDataRateLimiter = []int{}
 var fetchDetailRateLimiter = []int{}
 var UploadRateLimiter = []int{}
 
@@ -25,7 +25,7 @@ type DataController struct {
 func (c *DataController) FetchData(ctx *gin.Context) {
 	// Limit fetch rate
 	uid := ctx.GetInt("uid")
-	if util.IfExistInSlice(fetchDataRateLimiter, uid) {
+	if util.IfExistInSlice(crawler.FetchDataRateLimiter, uid) {
 		ctx.JSON(http.StatusTooManyRequests, gin.H{
 			"code": http.StatusTooManyRequests,
 			"msg":  "请求过于频繁，请稍后再试",
@@ -33,8 +33,6 @@ func (c *DataController) FetchData(ctx *gin.Context) {
 		})
 		return
 	}
-	fetchDataRateLimiter = append(fetchDataRateLimiter, uid)
-	defer util.RemoveFromSlice(fetchDataRateLimiter, uid)
 
 	// Fetch data
 	c.s.FetchData(uid)
@@ -69,7 +67,9 @@ func (c *DataController) FetchAssignmentDetail(ctx *gin.Context) {
 		return
 	}
 	fetchDetailRateLimiter = append(fetchDetailRateLimiter, uid)
-	defer util.RemoveFromSlice(fetchDetailRateLimiter, uid)
+	defer func() {
+		fetchDetailRateLimiter = util.RemoveFromSlice(fetchDetailRateLimiter, uid)
+	}()
 
 	// Fetch assignment detail
 	force, _ := strconv.ParseBool(ctx.Query("force"))
@@ -376,7 +376,9 @@ func (c *DataController) UploadJunoDoc(ctx *gin.Context) {
 		return
 	}
 	UploadRateLimiter = append(UploadRateLimiter, uid)
-	defer util.RemoveFromSlice(UploadRateLimiter, uid)
+	defer func() {
+		UploadRateLimiter = util.RemoveFromSlice(UploadRateLimiter, uid)
+	}()
 
 	// Turn in JunoDoc to Jupiter Ed
 	if err := c.s.TurnInJunoDoc(uid, id, data.Text); err != nil {
@@ -428,7 +430,9 @@ func (c *DataController) UploadFiles(ctx *gin.Context) {
 		return
 	}
 	UploadRateLimiter = append(UploadRateLimiter, uid)
-	defer util.RemoveFromSlice(UploadRateLimiter, uid)
+	defer func() {
+		UploadRateLimiter = util.RemoveFromSlice(UploadRateLimiter, uid)
+	}()
 
 	// Save files
 	for _, file := range form.File["files"] {

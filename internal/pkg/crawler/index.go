@@ -27,6 +27,8 @@ var pageCreate func() *rod.Page
 var PagePoolLoad int
 var PendingTaskCount int
 
+var FetchDataRateLimiter = []int{}
+
 // Initialize crawler with page pool to execute tasks asynchronously
 func Init() {
 	// Find browser executable path
@@ -114,6 +116,12 @@ func SwitchBrowser(id int) {
 func CrawlerJob(uid ...int) {
 	// When specific user ids are passed
 	if len(uid) == 1 {
+		// Rate limiter
+		FetchDataRateLimiter = append(FetchDataRateLimiter, uid[0])
+		defer func() {
+			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid[0])
+		}()
+
 		// Start job for single user
 		startedAt := time.Now()
 
@@ -128,6 +136,12 @@ func CrawlerJob(uid ...int) {
 		return
 	} else if len(uid) > 0 {
 		for _, id := range uid {
+			// Rate limiter
+			FetchDataRateLimiter = append(FetchDataRateLimiter, uid[0])
+			defer func() {
+				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid[0])
+			}()
+
 			// Start job for single user
 			startedAt := time.Now()
 
@@ -155,6 +169,12 @@ func CrawlerJob(uid ...int) {
 		if user.Status >= 100 {
 			continue
 		}
+
+		// Rate limiter
+		FetchDataRateLimiter = append(FetchDataRateLimiter, uid[0])
+		defer func() {
+			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid[0])
+		}()
 
 		wg.Add(1)
 		uid := user.ID
