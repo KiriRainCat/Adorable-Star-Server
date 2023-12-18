@@ -33,7 +33,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	}
 
 	// Login
-	token, user, err := c.s.Login(data.Name, data.Password)
+	token, user, isReturningUser, err := c.s.Login(data.Name, data.Password)
 	if err != nil {
 		if err.Error() == "internalErr" {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -62,7 +62,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
-		"data": token + "|" + strconv.Itoa(user.Status),
+		"data": token + "|" + strconv.Itoa(user.Status) + "|" + strconv.FormatBool(isReturningUser),
 	})
 }
 

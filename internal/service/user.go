@@ -90,7 +90,7 @@ func (s *UserService) Register(email string, validationCode string, username str
 	return nil
 }
 
-func (s *UserService) Login(name string, pwd string) (token string, user *model.User, err error) {
+func (s *UserService) Login(name string, pwd string) (token string, user *model.User, isReturningUser bool, err error) {
 	// Find user from DB
 	user, err = s.d.GetUserByUsernameOrEmail(name)
 	if err != nil {
@@ -115,6 +115,11 @@ func (s *UserService) Login(name string, pwd string) (token string, user *model.
 	if err != nil {
 		err = errors.New("internalErr")
 		return
+	}
+
+	// Whether is returning user
+	if time.Now().Unix()-user.ActiveAt.Unix() >= int64(time.Hour.Seconds()*24) {
+		isReturningUser = true
 	}
 
 	// Update user active time
