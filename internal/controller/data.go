@@ -25,7 +25,7 @@ type DataController struct {
 func (c *DataController) FetchData(ctx *gin.Context) {
 	// Limit fetch rate
 	uid := ctx.GetInt("uid")
-	if !util.IfExistInSlice(fetchDataRateLimiter, uid) {
+	if util.IfExistInSlice(fetchDataRateLimiter, uid) {
 		ctx.JSON(http.StatusTooManyRequests, gin.H{
 			"code": http.StatusTooManyRequests,
 			"msg":  "请求过于频繁，请稍后再试",
@@ -60,7 +60,7 @@ func (c *DataController) FetchAssignmentDetail(ctx *gin.Context) {
 
 	// Limit fetch rate
 	uid := ctx.GetInt("uid")
-	if !util.IfExistInSlice(fetchDetailRateLimiter, uid) {
+	if util.IfExistInSlice(fetchDetailRateLimiter, uid) {
 		ctx.JSON(http.StatusTooManyRequests, gin.H{
 			"code": http.StatusTooManyRequests,
 			"msg":  "请求过于频繁，请稍后再试",
@@ -367,7 +367,7 @@ func (c *DataController) UploadJunoDoc(ctx *gin.Context) {
 
 	// Limit upload rate
 	uid := ctx.GetInt("uid")
-	if !util.IfExistInSlice(UploadRateLimiter, uid) {
+	if util.IfExistInSlice(UploadRateLimiter, uid) {
 		ctx.JSON(http.StatusTooManyRequests, gin.H{
 			"code": http.StatusTooManyRequests,
 			"msg":  "请求过于频繁，请稍后再试",
@@ -419,7 +419,7 @@ func (c *DataController) UploadFiles(ctx *gin.Context) {
 
 	// Limit upload rate
 	uid := ctx.GetInt("uid")
-	if !util.IfExistInSlice(UploadRateLimiter, uid) {
+	if util.IfExistInSlice(UploadRateLimiter, uid) {
 		ctx.JSON(http.StatusTooManyRequests, gin.H{
 			"code": http.StatusTooManyRequests,
 			"msg":  "请求过于频繁，请稍后再试",
