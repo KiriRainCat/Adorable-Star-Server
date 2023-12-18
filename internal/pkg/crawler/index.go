@@ -137,9 +137,9 @@ func CrawlerJob(uid ...int) {
 	} else if len(uid) > 0 {
 		for _, id := range uid {
 			// Rate limiter
-			FetchDataRateLimiter = append(FetchDataRateLimiter, uid[0])
+			FetchDataRateLimiter = append(FetchDataRateLimiter, id)
 			defer func() {
-				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid[0])
+				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
 			}()
 
 			// Start job for single user
@@ -171,9 +171,9 @@ func CrawlerJob(uid ...int) {
 		}
 
 		// Rate limiter
-		FetchDataRateLimiter = append(FetchDataRateLimiter, uid[0])
+		FetchDataRateLimiter = append(FetchDataRateLimiter, user.ID)
 		defer func() {
-			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid[0])
+			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, user.ID)
 		}()
 
 		wg.Add(1)
