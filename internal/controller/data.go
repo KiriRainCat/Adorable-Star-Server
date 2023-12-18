@@ -13,12 +13,31 @@ import (
 
 var Data = &DataController{service.Data}
 
+// Rate limiter lists
+var fetchDataRateLimiter = []int{}
+var fetchDetailRateLimiter = []int{}
+var UploadRateLimiter = []int{}
+
 type DataController struct {
 	s *service.DataService
 }
 
 func (c *DataController) FetchData(ctx *gin.Context) {
-	c.s.FetchData(ctx.GetInt("uid"))
+	// Limit fetch rate
+	uid := ctx.GetInt("uid")
+	if !util.IfExistInSlice(fetchDataRateLimiter, uid) {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"code": http.StatusTooManyRequests,
+			"msg":  "请求过于频繁，请稍后再试",
+			"data": nil,
+		})
+		return
+	}
+	fetchDataRateLimiter = append(fetchDataRateLimiter, uid)
+	defer util.RemoveFromSlice(fetchDataRateLimiter, uid)
+
+	// Fetch data
+	c.s.FetchData(uid)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
@@ -39,8 +58,22 @@ func (c *DataController) FetchAssignmentDetail(ctx *gin.Context) {
 		return
 	}
 
+	// Limit fetch rate
+	uid := ctx.GetInt("uid")
+	if !util.IfExistInSlice(fetchDetailRateLimiter, uid) {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"code": http.StatusTooManyRequests,
+			"msg":  "请求过于频繁，请稍后再试",
+			"data": nil,
+		})
+		return
+	}
+	fetchDetailRateLimiter = append(fetchDetailRateLimiter, uid)
+	defer util.RemoveFromSlice(fetchDetailRateLimiter, uid)
+
+	// Fetch assignment detail
 	force, _ := strconv.ParseBool(ctx.Query("force"))
-	err := c.s.FetchAssignmentDetail(ctx.GetInt("uid"), id, force)
+	err := c.s.FetchAssignmentDetail(uid, id, force)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
@@ -332,8 +365,21 @@ func (c *DataController) UploadJunoDoc(ctx *gin.Context) {
 		return
 	}
 
+	// Limit upload rate
+	uid := ctx.GetInt("uid")
+	if !util.IfExistInSlice(UploadRateLimiter, uid) {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"code": http.StatusTooManyRequests,
+			"msg":  "请求过于频繁，请稍后再试",
+			"data": nil,
+		})
+		return
+	}
+	UploadRateLimiter = append(UploadRateLimiter, uid)
+	defer util.RemoveFromSlice(UploadRateLimiter, uid)
+
 	// Turn in JunoDoc to Jupiter Ed
-	if err := c.s.TurnInJunoDoc(ctx.GetInt("uid"), id, data.Text); err != nil {
+	if err := c.s.TurnInJunoDoc(uid, id, data.Text); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
 			"msg":  "提交失败",
@@ -371,8 +417,20 @@ func (c *DataController) UploadFiles(ctx *gin.Context) {
 		return
 	}
 
-	// Save files
+	// Limit upload rate
 	uid := ctx.GetInt("uid")
+	if !util.IfExistInSlice(UploadRateLimiter, uid) {
+		ctx.JSON(http.StatusTooManyRequests, gin.H{
+			"code": http.StatusTooManyRequests,
+			"msg":  "请求过于频繁，请稍后再试",
+			"data": nil,
+		})
+		return
+	}
+	UploadRateLimiter = append(UploadRateLimiter, uid)
+	defer util.RemoveFromSlice(UploadRateLimiter, uid)
+
+	// Save files
 	for _, file := range form.File["files"] {
 		ctx.SaveUploadedFile(file, util.GetCwd()+"/storage/tmp"+strconv.Itoa(uid)+"/"+file.Filename)
 	}

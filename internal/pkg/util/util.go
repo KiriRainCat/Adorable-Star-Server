@@ -25,3 +25,23 @@ func EnsureNessesaryDirs() {
 		}
 	}
 }
+
+func RemoveFromSlice(slice []int, target int) []int {
+	j := 0
+	for _, v := range slice {
+		if !(v == target) {
+			slice[j] = v
+			j++
+		}
+	}
+	return slice[:j]
+}
+
+func IfExistInSlice(slice []int, target int) bool {
+	for _, v := range slice {
+		if v == target {
+			return true
+		}
+	}
+	return false
+}
