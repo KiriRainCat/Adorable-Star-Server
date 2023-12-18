@@ -38,6 +38,7 @@
   ],
   "files.exclude": {
     "storage": true,
+    "log": true,
     "*.exe": true
   }
 }
