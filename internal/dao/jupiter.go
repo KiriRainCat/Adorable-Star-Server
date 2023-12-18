@@ -29,7 +29,7 @@ func (*JupiterDAO) GetCourseByID(id int) (course *model.Course, err error) {
 }
 
 func (*JupiterDAO) GetCoursesByUID(uid int) (courses []*model.Course, err error) {
-	err = DB.Order("name").Find(&courses, "uid = ?", uid).Error
+	err = DB.Order("title").Find(&courses, "uid = ?", uid).Error
 	return
 }
 
