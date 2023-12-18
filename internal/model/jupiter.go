@@ -41,6 +41,7 @@ type Assignment struct {
 	TurnInnedList StringList `json:"turn_in_list,omitempty"`
 	CreatedAt     time.Time  `json:"created_at,omitempty"`
 	DescFetchedAt time.Time  `json:"desc_fetched_at,omitempty"`
+	FeedBack      string     `json:"feed_back,omitempty"`
 }
 
 // Copy all fields from [other] to this course for EMPTY fields

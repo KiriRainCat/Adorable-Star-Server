@@ -98,10 +98,9 @@ func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignmen
 }
 
 // Get description for an assignment
-func GetAssignmentDesc(page *rod.Page) string {
+func GetAssignmentDesc(page *rod.Page) (desc string) {
 	WaitStable(page)
 
-	var desc string
 	err := rod.Try(func() {
 		desc = page.Timeout(time.Second * 2).MustElement("#mainpage > div[class*='selectable wrap']").MustHTML()
 	})
@@ -114,6 +113,23 @@ func GetAssignmentDesc(page *rod.Page) string {
 	desc = strings.ReplaceAll(desc, " style=\"max-width:472px;\"", "")
 	desc = strings.ReplaceAll(desc, "<b>Directions</b><br>", "")
 	return desc
+}
+
+// Get teacher feedbacks for an assignment
+func GetTeacherFeedback(page *rod.Page, uid int, id int) (feedback string) {
+	err := rod.Try(func() {
+		feedback = page.Timeout(time.Second * 2).MustElement("div:nth-child(3) > div > div:nth-child(8)").MustText()
+	})
+	if err != nil {
+		return ""
+	}
+
+	rod.Try(func() {
+		page.Timeout(time.Millisecond * 200).MustElement("div.momentum").
+			MustScreenshot(util.GetCwd() + "/storage/" + strconv.Itoa(uid) + "/feedback/" + strconv.Itoa(id) + ".png")
+	})
+
+	return
 }
 
 // Check whether the assignment has turn in button
@@ -191,7 +207,7 @@ func GetReportCardAndGPA(page *rod.Page, uid int) (gpa string) {
 	}
 
 	// Take a screenshot of the report card section
-	page.MustElement("table.bord > tbody").MustScreenshot(util.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
+	page.MustElement("table.bord > tbody").MustScreenshot(util.GetCwd() + "/storage/" + strconv.Itoa(uid) + "/report.png")
 
 	return
 }

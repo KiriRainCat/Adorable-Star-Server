@@ -83,7 +83,7 @@ func (s *DataService) GetAssignment(id int) (assignment *model.Assignment, err e
 }
 
 func (s *DataService) GetReport(uid int) (file []byte, err error) {
-	file, err = os.ReadFile(util.GetCwd() + "/storage/img/report/" + strconv.Itoa(uid) + ".png")
+	file, err = os.ReadFile(util.GetCwd() + "/storage/" + strconv.Itoa(uid) + "/report.png")
 	if os.IsNotExist(err) {
 		err = errors.New("fileNotExist")
 	}
