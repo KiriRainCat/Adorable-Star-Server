@@ -1,20 +1,19 @@
 services:
-  Adoralbe-Star:
+  adorable-star:
     command: "/app/main"
     deploy:
       resources:
         limits:
           cpus: "1"
           memory: "512M"
-    image: registry.cn-hangzhou.aliyuncs.com/kiriraincat/adorable-star:latest
+    image: g-qerw8644-docker.pkg.coding.net/adorable-star/docker/adorable-star:latest
     container_name: Adorable-Star
     restart: on-failure
-    ports:
-      - "8003:8003"
-    network-mode: host
+    network_mode: host
     volumes:
-      - /home/ubuntu/backend/Adorable-Star/config.yaml:/app/config.yaml
-      - /home/ubuntu/backend/Adorable-Star/storage/img/:/app/storage/img/
-      - /home/ubuntu/backend/Adorable-Star/log/:/app/storage/log/
+      - /usr/bin/:/usr/host/bin/
+      - ./config.yaml:/app/config.yaml
+      - ./storage/:/app/storage/
+      - ./log/:/app/log/
 
 version: "3"
