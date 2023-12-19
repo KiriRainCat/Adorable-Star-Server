@@ -22,6 +22,8 @@ FROM alpine
 ENV TZ=Asia/Shanghai
 ENV GIN_MODE=release
 
+RUN apk add --no-cache chromium
+
 WORKDIR /app
 
 COPY --from=builder /build/main /app/main
