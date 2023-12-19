@@ -576,8 +576,7 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	}
 
 	// Get assignment details
-	desc := GetAssignmentDesc(page)
-	assignment.Desc = desc
+	assignment.Desc = GetAssignmentDesc(page)
 	assignment.FeedBack = GetTeacherFeedback(page, uid, assignment.ID)
 	assignment.TurnInAble = HasTurnIn(page)
 	page.WaitStable(time.Millisecond * 100)

@@ -117,6 +117,8 @@ func GetAssignmentDesc(page *rod.Page) (desc string) {
 
 // Get teacher feedbacks for an assignment
 func GetTeacherFeedback(page *rod.Page, uid int, id int) (feedback string) {
+	WaitStable(page)
+
 	err := rod.Try(func() {
 		feedback = page.Timeout(time.Second * 2).MustElement("div:nth-child(3) > div > div:nth-child(8)").MustText()
 	})
@@ -128,6 +130,7 @@ func GetTeacherFeedback(page *rod.Page, uid int, id int) (feedback string) {
 		page.Timeout(time.Millisecond * 200).MustElement("div.momentum").
 			MustScreenshot(util.GetCwd() + "/storage/" + strconv.Itoa(uid) + "/feedback/" + strconv.Itoa(id) + ".png")
 	})
+	page.WaitStable(time.Millisecond * 100)
 
 	return
 }
