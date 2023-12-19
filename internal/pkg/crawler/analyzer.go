@@ -127,10 +127,9 @@ func GetTeacherFeedback(page *rod.Page, uid int, id int) (feedback string) {
 	}
 
 	rod.Try(func() {
-		page.Timeout(time.Millisecond * 200).MustElement("div.momentum").
+		page.Timeout(time.Second).MustElement("div.momentum").
 			MustScreenshot(util.GetCwd() + "/storage/" + strconv.Itoa(uid) + "/feedback/" + strconv.Itoa(id) + ".png")
 	})
-	page.WaitStable(time.Millisecond * 100)
 
 	return
 }
