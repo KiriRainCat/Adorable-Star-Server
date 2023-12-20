@@ -435,7 +435,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				assignment.CopyFromOther(storedAssignment)
 
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.FeedBack == assignment.FeedBack && storedAssignment.TurnInAble == assignment.TurnInAble && reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList) {
+				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.Feedback == assignment.Feedback && storedAssignment.TurnInAble == assignment.TurnInAble && reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList) {
 					same = true
 				}
 				storedAssignments[idx] = nil
@@ -453,6 +453,14 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 				}
 			} else {
 				d.UpdateAssignment(old, assignment)
+
+				// Need an extra fetch for assignment that got new score for teacher feedbacks
+				if old.Score != assignment.Score {
+					assignmentC := assignment
+					go func() {
+						StoreAssignmentsData(uid, assignmentC.From, []*model.Assignment{FetchAssignmentDetail(uid, assignmentC, true)}, true)
+					}()
+				}
 			}
 		}
 	}
@@ -507,7 +515,7 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 	// Check if there is existing descriptions that's within expiration time
 	storedAssignment, err := dao.Jupiter.GetAssignmentByInfo(assignment.Title, &assignment.Due, assignment.From)
 	if err == nil && time.Now().Unix()-storedAssignment.DescFetchedAt.Unix() < 1800 && (len(force) == 0 || !force[0]) {
-		if storedAssignment.FeedBack == "" || assignment.FeedBack != "" {
+		if storedAssignment.Feedback == "" || assignment.Feedback != "" {
 			assignment.Desc = storedAssignment.Desc
 			assignment.TurnInAble = storedAssignment.TurnInAble
 			assignment.TurnInTypes = storedAssignment.TurnInTypes
@@ -577,7 +585,7 @@ func FetchAssignmentDetail(uid int, assignment *model.Assignment, force ...bool)
 
 	// Get assignment details
 	assignment.Desc = GetAssignmentDesc(page)
-	assignment.FeedBack = GetTeacherFeedback(page, uid, assignment.ID)
+	assignment.Feedback = GetTeacherFeedback(page, uid, assignment.ID)
 	assignment.TurnInAble = HasTurnIn(page)
 	page.WaitStable(time.Millisecond * 100)
 	if assignment.TurnInAble == 1 {

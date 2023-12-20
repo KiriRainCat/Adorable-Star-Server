@@ -41,7 +41,7 @@ type Assignment struct {
 	TurnInnedList StringList `json:"turn_in_list,omitempty"`
 	CreatedAt     time.Time  `json:"created_at,omitempty"`
 	DescFetchedAt time.Time  `json:"desc_fetched_at,omitempty"`
-	FeedBack      string     `json:"feed_back,omitempty"`
+	Feedback      string     `json:"feedback,omitempty"`
 }
 
 // Copy all fields from [other] to this course for EMPTY fields
@@ -98,8 +98,8 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 	if len(o.TurnInnedList) == 0 {
 		o.TurnInnedList = other.TurnInnedList
 	}
-	if o.FeedBack == "" {
-		o.FeedBack = other.FeedBack
+	if o.Feedback == "" {
+		o.Feedback = other.Feedback
 	}
 }
 
@@ -191,6 +191,26 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 			})
 		}()
 	}
+
+	// If feedback update
+	if tx.Statement.Changed("FeedBack") {
+		feedback := o.Feedback
+		go func() {
+			// Wait for course to be updated
+			time.Sleep(time.Second * 6)
+
+			// Insert new message to database
+			tx.Create(&Message{
+				UID:        o.UID,
+				Type:       1,
+				From:       o.ID,
+				Course:     o.From,
+				Assignment: o.Title,
+				Msg:        "Feedback|" + feedback + "|" + o.Feedback,
+			})
+		}()
+	}
+
 	return nil
 }
 
