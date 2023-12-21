@@ -6,6 +6,7 @@ type Configuration struct {
 	Postgresql Postgresql `mapstructure:"postgresql" json:"postgresql" yaml:"postgresql"`
 	Redis      Redis      `mapstructure:"redis" json:"redis" yaml:"redis"`
 	SMTP       SMTP       `mapstructure:"smtp" json:"smtp" yaml:"smtp"`
+	GPT        GPT        `mapstructure:"gpt" json:"gpt" yaml:"gpt"`
 }
 
 type Server struct {
@@ -44,4 +45,8 @@ type SMTP struct {
 	Port int    `mapstructure:"port" json:"port,omitempty" yaml:"port"`
 	Key  string `mapstructure:"key" json:"key,omitempty" yaml:"key"`
 	Mail string `mapstructure:"mail" json:"mail,omitempty" yaml:"mail"`
+}
+
+type GPT struct {
+	Username string `mapstructure:"username" json:"username,omitempty" yaml:"username"`
 }

@@ -5,6 +5,7 @@ import (
 	"adorable-star/internal/model"
 	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/util"
+	"encoding/json"
 	"errors"
 	"math/rand"
 	"reflect"
@@ -13,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 )
@@ -28,6 +30,9 @@ var PagePoolLoad int
 var PendingTaskCount int
 
 var FetchDataRateLimiter = []int{}
+
+var GptPage *rod.Page
+var GptAccessToken string
 
 // Initialize crawler with page pool to execute tasks asynchronously
 func Init() {
@@ -50,6 +55,27 @@ func Init() {
 			Bin(bin).
 			MustLaunch()).
 		MustConnect()
+
+	// Create a page for Pandora Next(GPT)
+	go func() {
+		if gin.Mode() == gin.ReleaseMode {
+			GptPage = browserWithoutProxy.MustIncognito().MustPage("http://localhost:4002")
+		} else {
+			GptPage = browserWithoutProxy.MustIncognito().MustPage("http://100.64.0.2:4002")
+		}
+
+		rod.Try(func() {
+			GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
+			GptPage.Timeout(time.Second).MustElement("button[type*='submit']").MustClick()
+		})
+
+		go GptPage.HijackRequests().MustAdd("*/session", func(ctx *rod.Hijack) {
+			res := make(map[string]string)
+			ctx.MustLoadResponse()
+			json.Unmarshal(ctx.Response.Payload().Body, &res)
+			GptAccessToken = res["accessToken"]
+		}).Run()
+	}()
 
 	// Set browser
 	browser = browserWithProxy

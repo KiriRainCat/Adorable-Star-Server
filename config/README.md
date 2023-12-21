@@ -39,4 +39,6 @@ smtp: # SMTP 邮件服务设置
   port: 2023 # 端口
   key: "pwd" # 秘钥
   mail: "name@host.com" # 邮箱
+gpt: # GPT 设置 (使用Token登录)
+  email: "name" # 用户名
 ```
