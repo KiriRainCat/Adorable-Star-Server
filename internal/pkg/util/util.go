@@ -27,14 +27,13 @@ func EnsureNessesaryDirs() {
 }
 
 func RemoveFromSlice(slice []int, target int) []int {
-	j := 0
+	tmp := slice[:0]
 	for _, v := range slice {
-		if !(v == target) {
-			slice[j] = v
-			j++
+		if v != target {
+			tmp = append(tmp, v)
 		}
 	}
-	return slice[:j]
+	return tmp
 }
 
 func IfExistInSlice(slice []int, target int) bool {

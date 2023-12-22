@@ -142,43 +142,47 @@ func SwitchBrowser(id int) {
 func CrawlerJob(uid ...int) {
 	// When specific user ids are passed
 	if len(uid) == 1 {
+		id := uid[0]
+
 		// Rate limiter
-		FetchDataRateLimiter = append(FetchDataRateLimiter, uid[0])
+		FetchDataRateLimiter = append(FetchDataRateLimiter, id)
 		defer func() {
-			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid[0])
+			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
 		}()
 
 		// Start job for single user
 		startedAt := time.Now()
 
 		// Fetch all data
-		courseList, assignmentsList, gpa, err := FetchData(uid[0])
+		courseList, assignmentsList, gpa, err := FetchData(id)
 		if err != nil {
 			return
 		}
 
 		// Store fetched data to database
-		StoreData(uid[0], gpa, courseList, assignmentsList, &startedAt)
+		StoreData(id, gpa, courseList, assignmentsList, &startedAt)
 		return
 	} else if len(uid) > 0 {
 		for _, id := range uid {
-			// Rate limiter
-			FetchDataRateLimiter = append(FetchDataRateLimiter, id)
-			defer func() {
-				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
+			func() {
+				// Rate limiter
+				FetchDataRateLimiter = append(FetchDataRateLimiter, id)
+				defer func() {
+					FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
+				}()
+
+				// Start job for single user
+				startedAt := time.Now()
+
+				// Fetch all data
+				courseList, assignmentsList, gpa, err := FetchData(id)
+				if err != nil {
+					return
+				}
+
+				// Store fetched data to database
+				StoreData(id, gpa, courseList, assignmentsList, &startedAt)
 			}()
-
-			// Start job for single user
-			startedAt := time.Now()
-
-			// Fetch all data
-			courseList, assignmentsList, gpa, err := FetchData(id)
-			if err != nil {
-				return
-			}
-
-			// Store fetched data to database
-			StoreData(id, gpa, courseList, assignmentsList, &startedAt)
 		}
 		return
 	}
@@ -196,20 +200,21 @@ func CrawlerJob(uid ...int) {
 			continue
 		}
 
-		// Rate limiter
-		FetchDataRateLimiter = append(FetchDataRateLimiter, user.ID)
-		defer func() {
-			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, user.ID)
-		}()
-
 		wg.Add(1)
 		uid := user.ID
 		go func() {
+			// Rate limiter
+			FetchDataRateLimiter = append(FetchDataRateLimiter, uid)
+			defer func() {
+				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid)
+			}()
+
 			startedAt := time.Now()
 
 			// Fetch all data
 			courseList, assignmentsList, gpa, err := FetchData(uid)
 			if err != nil {
+				wg.Done()
 				return
 			}
 
