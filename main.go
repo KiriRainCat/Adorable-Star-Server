@@ -45,6 +45,7 @@ func main() {
 	router.AuthRoutes(r)
 	router.DataRoutes(r)
 	router.AdminRoutes(r)
+	router.GptRoutes(r)
 
 	server.Run(":" + config.Config.Server.Port)
 }

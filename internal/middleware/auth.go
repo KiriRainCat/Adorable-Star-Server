@@ -43,7 +43,8 @@ func (m *AuthMiddleware) AuthenticateUser(ctx *gin.Context) {
 		strings.Contains(ctx.Request.URL.String(), "login") ||
 		strings.Contains(ctx.Request.URL.String(), "register") ||
 		strings.Contains(ctx.Request.URL.String(), "complete-info") ||
-		strings.Contains(ctx.Request.URL.String(), "validation-code") {
+		strings.Contains(ctx.Request.URL.String(), "validation-code") ||
+		strings.Contains(ctx.Request.URL.String(), "gpt") {
 		ctx.Next()
 		return
 	}
