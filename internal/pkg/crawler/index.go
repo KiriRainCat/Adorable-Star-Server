@@ -17,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/stealth"
 )
 
 var d = dao.Jupiter
@@ -59,9 +60,9 @@ func Init() {
 	// Create a page for Pandora Next(GPT)
 	go func() {
 		if gin.Mode() == gin.ReleaseMode {
-			GptPage = browserWithoutProxy.MustIncognito().MustPage("http://localhost:4002")
+			GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://localhost:4002")
 		} else {
-			GptPage = browserWithoutProxy.MustIncognito().MustPage("http://100.64.0.2:4002")
+			GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
 		}
 
 		rod.Try(func() {
@@ -83,7 +84,8 @@ func Init() {
 	// Create page pool for multithreading
 	pagePool = rod.NewPagePool(config.Config.Crawler.MaxParallel)
 	pageCreate = func() *rod.Page {
-		return browser.MustIncognito().MustPage()
+		PagePoolLoad++
+		return stealth.MustPage(browser.MustIncognito())
 	}
 
 	// Immediately start one crawler job
@@ -162,23 +164,25 @@ func CrawlerJob(uid ...int) {
 		return
 	} else if len(uid) > 0 {
 		for _, id := range uid {
-			// Rate limiter
-			FetchDataRateLimiter = append(FetchDataRateLimiter, id)
-			defer func() {
-				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
+			func() {
+				// Rate limiter
+				FetchDataRateLimiter = append(FetchDataRateLimiter, id)
+				defer func() {
+					FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
+				}()
+
+				// Start job for single user
+				startedAt := time.Now()
+
+				// Fetch all data
+				courseList, assignmentsList, gpa, err := FetchData(id)
+				if err != nil {
+					return
+				}
+
+				// Store fetched data to database
+				StoreData(id, gpa, courseList, assignmentsList, &startedAt)
 			}()
-
-			// Start job for single user
-			startedAt := time.Now()
-
-			// Fetch all data
-			courseList, assignmentsList, gpa, err := FetchData(id)
-			if err != nil {
-				return
-			}
-
-			// Store fetched data to database
-			StoreData(id, gpa, courseList, assignmentsList, &startedAt)
 		}
 		return
 	}
@@ -196,15 +200,15 @@ func CrawlerJob(uid ...int) {
 			continue
 		}
 
-		// Rate limiter
-		FetchDataRateLimiter = append(FetchDataRateLimiter, user.ID)
-		defer func() {
-			FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, user.ID)
-		}()
-
 		wg.Add(1)
 		uid := user.ID
 		go func() {
+			// Rate limiter
+			FetchDataRateLimiter = append(FetchDataRateLimiter, uid)
+			defer func() {
+				FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, uid)
+			}()
+
 			startedAt := time.Now()
 
 			// Fetch all data
@@ -225,13 +229,12 @@ func CrawlerJob(uid ...int) {
 func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	// Whether using page pool
 	if len(notPool) > 0 && notPool[0] {
-		page = browser.MustIncognito().MustPage().MustSetCookies()
+		page = stealth.MustPage(browser).MustSetCookies()
 	} else {
 		time.Sleep(time.Minute / 2 * time.Duration(rand.Float32()))
 		PendingTaskCount++
 		page = pagePool.Get(pageCreate).MustSetCookies()
 		PendingTaskCount--
-		PagePoolLoad++
 	}
 
 	// Bypass Cloudflare detection for crawler
@@ -256,6 +259,7 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 
 			// Switch to browser without proxy
 			page.MustClose()
+			PagePoolLoad--
 			browser = browserWithoutProxy
 			return OpenJupiterPage(uid)
 		}

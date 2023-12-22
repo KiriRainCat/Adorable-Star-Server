@@ -3,6 +3,7 @@ package util
 import (
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,7 +27,10 @@ func EnsureNessesaryDirs() {
 	}
 }
 
+var lock sync.Mutex
+
 func RemoveFromSlice(slice []int, target int) []int {
+	lock.Lock()
 	j := 0
 	for _, v := range slice {
 		if !(v == target) {
@@ -34,6 +38,7 @@ func RemoveFromSlice(slice []int, target int) []int {
 			j++
 		}
 	}
+	lock.Unlock()
 	return slice[:j]
 }
 
