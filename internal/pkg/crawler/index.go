@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/stealth"
@@ -59,11 +58,7 @@ func Init() {
 
 	// Create a page for Pandora Next(GPT)
 	go func() {
-		if gin.Mode() == gin.ReleaseMode {
-			GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://localhost:4002")
-		} else {
-			GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
-		}
+		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
 
 		rod.Try(func() {
 			GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
