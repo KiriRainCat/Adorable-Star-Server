@@ -79,7 +79,6 @@ func Init() {
 	// Create page pool for multithreading
 	pagePool = rod.NewPagePool(config.Config.Crawler.MaxParallel)
 	pageCreate = func() *rod.Page {
-		PagePoolLoad++
 		return stealth.MustPage(browser.MustIncognito())
 	}
 
@@ -229,6 +228,7 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 		time.Sleep(time.Minute / 2 * time.Duration(rand.Float32()))
 		PendingTaskCount++
 		page = pagePool.Get(pageCreate).MustSetCookies()
+		PagePoolLoad++
 		PendingTaskCount--
 	}
 
