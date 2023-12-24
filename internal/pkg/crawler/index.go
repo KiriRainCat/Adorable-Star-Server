@@ -69,7 +69,7 @@ func Init() {
 			res := make(map[string]string)
 			ctx.MustLoadResponse()
 			json.Unmarshal(ctx.Response.Payload().Body, &res)
-			GptAccessToken = res["accessToken"]
+			GptAccessToken = "Bearer " + res["accessToken"]
 		}).Run()
 	}()
 
