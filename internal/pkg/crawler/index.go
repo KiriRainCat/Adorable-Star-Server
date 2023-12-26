@@ -57,21 +57,7 @@ func Init() {
 		MustConnect()
 
 	// Create a page for Pandora Next(GPT)
-	go func() {
-		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
-
-		rod.Try(func() {
-			GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
-			GptPage.Timeout(time.Second).MustElement("button[type*='submit']").MustClick()
-		})
-
-		go GptPage.HijackRequests().MustAdd("*/session", func(ctx *rod.Hijack) {
-			res := make(map[string]string)
-			ctx.MustLoadResponse()
-			json.Unmarshal(ctx.Response.Payload().Body, &res)
-			GptAccessToken = "Bearer " + res["accessToken"]
-		}).Run()
-	}()
+	go GetGptAccessToken()
 
 	// Set browser
 	browser = browserWithProxy
@@ -131,6 +117,30 @@ func SwitchBrowser(id int) {
 		browser = browserWithoutProxy
 	default:
 		browser = browserWithoutProxy
+	}
+}
+
+func GetGptAccessToken() {
+	if GptPage == nil {
+		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
+	} else {
+		GptPage.MustReload()
+	}
+
+	go GptPage.HijackRequests().MustAdd("*/session", func(ctx *rod.Hijack) {
+		res := make(map[string]string)
+		ctx.MustLoadResponse()
+		json.Unmarshal(ctx.Response.Payload().Body, &res)
+		GptAccessToken = "Bearer " + res["accessToken"]
+	}).Run()
+
+	rod.Try(func() {
+		GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
+		GptPage.Timeout(time.Second).MustElement("button[type*='submit']").MustClick()
+	})
+
+	if GptPage.Timeout(time.Second*30).WaitElementsMoreThan("img[alt*='User']", 0) != nil {
+		util.Log("crawler", "INFO Pandora Next GPT Err")
 	}
 }
 

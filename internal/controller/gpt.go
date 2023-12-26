@@ -1,17 +1,20 @@
 package controller
 
 import (
+	"adorable-star/internal/pkg/crawler"
 	"adorable-star/internal/service"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var GPT = &GptController{service.GPT}
+var GPT = &GptController{service.GPT, time.Now().Unix()}
 
 type GptController struct {
-	s *service.GptService
+	s            *service.GptService
+	requested_at int64
 }
 
 func (c *GptController) Conversation(ctx *gin.Context) {
@@ -28,6 +31,13 @@ func (c *GptController) Conversation(ctx *gin.Context) {
 			"msg":  "参数错误",
 		})
 		return
+	}
+
+	// Check time elapsed from last request to decide whether required to reload the page
+	now := time.Now().Unix()
+	if now-c.requested_at > 300 {
+		c.requested_at = now
+		crawler.GetGptAccessToken()
 	}
 
 	stream := make(chan string, 10)
