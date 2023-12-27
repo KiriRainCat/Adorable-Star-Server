@@ -22,8 +22,6 @@ func (s *DataService) FetchData(uid int) {
 }
 
 func (s *DataService) FetchAssignmentDetail(uid int, id int, force bool) error {
-	// TODO: Limit request count for each user
-
 	// Get assignment data
 	storedAssignment, err := s.d.GetAssignmentByID(id)
 	if err != nil {
