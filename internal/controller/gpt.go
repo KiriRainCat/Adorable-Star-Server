@@ -39,6 +39,7 @@ func (c *GptController) Conversation(ctx *gin.Context) {
 		c.requested_at = now
 		crawler.GetGptAccessToken()
 	}
+	c.requested_at = now
 
 	stream := make(chan string, 10)
 	go func() {

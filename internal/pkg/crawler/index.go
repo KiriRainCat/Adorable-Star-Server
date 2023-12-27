@@ -124,7 +124,9 @@ func GetGptAccessToken() {
 	if GptPage == nil {
 		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
 	} else {
-		GptPage.MustReload()
+		GptPage.Close()
+		time.Sleep(time.Millisecond * 250)
+		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
 	}
 
 	go GptPage.HijackRequests().MustAdd("*/session", func(ctx *rod.Hijack) {
@@ -133,6 +135,8 @@ func GetGptAccessToken() {
 		json.Unmarshal(ctx.Response.Payload().Body, &res)
 		GptAccessToken = "Bearer " + res["accessToken"]
 	}).Run()
+
+	GptPage.MustWaitLoad()
 
 	rod.Try(func() {
 		GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
