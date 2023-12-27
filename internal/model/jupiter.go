@@ -1,7 +1,9 @@
 package model
 
 import (
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -161,6 +163,11 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 			// Wait for course to be updated
 			time.Sleep(time.Second * 6)
 
+			// Set to complete if score condition met
+			if matched, _ := regexp.MatchString(`\d+ / \d+`, o.Score); strings.Contains(o.Score, "%") || strings.Contains(o.Score, "Complete") || matched {
+				tx.Model(&o).UpdateColumn("status", 1)
+			}
+
 			// Insert new message to database
 			tx.Create(&Message{
 				UID:        o.UID,
@@ -208,6 +215,23 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 				Assignment: o.Title,
 				Msg:        "Feedback|" + feedback + "|" + o.Feedback,
 			})
+		}()
+	}
+
+	// If turn in able update, update for all users
+	if tx.Statement.Changed("TurnInAble") {
+		go func() {
+			// Wait for course to be updated
+			time.Sleep(time.Second * 6)
+
+			// Update all same assignments from different users
+			var assignments []*Assignment
+			err := tx.Order("desc_fetched_at DESC").Find(&assignments, "title = ? AND due = ? AND \"from\" = ?", o.Title, o.Due, o.From).Error
+			if err == nil {
+				for _, a := range assignments {
+					tx.Model(&a).UpdateColumns(Assignment{TurnInAble: o.TurnInAble, TurnInTypes: o.TurnInTypes})
+				}
+			}
 		}()
 	}
 
