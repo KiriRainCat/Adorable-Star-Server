@@ -164,7 +164,11 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 			time.Sleep(time.Second * 6)
 
 			// Set to complete if score condition met
-			if matched, _ := regexp.MatchString(`\d+ / \d+`, o.Score); strings.Contains(o.Score, "%") || strings.Contains(o.Score, "Complete") || matched {
+			if matched, _ := regexp.MatchString(`\d+ / \d+`, o.Score); matched ||
+				strings.Contains(o.Score, "%") ||
+				strings.Contains(strings.ToLower(o.Score), "ok") ||
+				strings.Contains(strings.ToLower(o.Score), "excused") ||
+				strings.Contains(strings.ToLower(o.Score), "complete") {
 				tx.Model(&o).UpdateColumn("status", 1)
 			}
 
