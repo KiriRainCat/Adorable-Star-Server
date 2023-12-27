@@ -116,7 +116,7 @@ func SwitchBrowser(id int) {
 	case 1:
 		browser = browserWithoutProxy
 	default:
-		browser = browserWithoutProxy
+		browser = browserWithProxy
 	}
 }
 

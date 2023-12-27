@@ -15,8 +15,7 @@ import (
 
 var Admin = &AdminController{}
 
-type AdminController struct {
-}
+type AdminController struct{}
 
 func (c *AdminController) SwitchBrowser(ctx *gin.Context) {
 	// Parse params
