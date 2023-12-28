@@ -191,6 +191,27 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 			// Wait for course to be updated
 			time.Sleep(time.Second * 6)
 
+			// Update all same assignments from different users
+			go func() {
+				var assignments []*Assignment
+				err := tx.Find(&assignments, "title = ? AND due = ? AND \"from\" = ?", o.Title, o.Due, o.From).Error
+				if err == nil {
+					for _, a := range assignments {
+						tx.Model(&a).UpdateColumn("desc", o.Desc)
+
+						// Insert new message to database
+						tx.Create(&Message{
+							UID:        a.UID,
+							Type:       1,
+							From:       a.ID,
+							Course:     a.From,
+							Assignment: a.Title,
+							Msg:        "Desc|" + desc + "|" + o.Desc,
+						})
+					}
+				}
+			}()
+
 			// Insert new message to database
 			tx.Create(&Message{
 				UID:        o.UID,
@@ -224,18 +245,42 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 
 	// If turn in able update, update for all users
 	if tx.Statement.Changed("TurnInAble") {
+		turnInAble := o.TurnInAble
 		go func() {
 			// Wait for course to be updated
 			time.Sleep(time.Second * 6)
 
 			// Update all same assignments from different users
-			var assignments []*Assignment
-			err := tx.Order("desc_fetched_at DESC").Find(&assignments, "title = ? AND due = ? AND \"from\" = ?", o.Title, o.Due, o.From).Error
-			if err == nil {
-				for _, a := range assignments {
-					tx.Model(&a).UpdateColumns(Assignment{TurnInAble: o.TurnInAble, TurnInTypes: o.TurnInTypes})
+			go func() {
+				var assignments []*Assignment
+				err := tx.Find(&assignments, "title = ? AND due = ? AND \"from\" = ?", o.Title, o.Due, o.From).Error
+				if err == nil {
+					for _, a := range assignments {
+						tx.Model(&a).UpdateColumns(Assignment{TurnInAble: o.TurnInAble, TurnInTypes: o.TurnInTypes})
+
+						// Insert new message to database
+						tx.Create(&Message{
+							UID:        a.UID,
+							Type:       1,
+							From:       a.ID,
+							Course:     a.From,
+							Assignment: a.Title,
+							Msg:        "TurnInAble|" + strconv.Itoa(turnInAble) + "|" + strconv.Itoa(o.TurnInAble),
+						})
+					}
 				}
-			}
+			}()
+
+			// Insert new message to database
+			tx.Create(&Message{
+				UID:        o.UID,
+				Type:       1,
+				From:       o.ID,
+				Course:     o.From,
+				Assignment: o.Title,
+				Msg:        "TurnInAble|" + strconv.Itoa(turnInAble) + "|" + strconv.Itoa(o.TurnInAble),
+			})
+
 		}()
 	}
 
