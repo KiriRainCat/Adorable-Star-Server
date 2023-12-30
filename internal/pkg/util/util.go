@@ -27,10 +27,11 @@ func EnsureNessesaryDirs() {
 	}
 }
 
-var lock sync.Mutex
+var appendLock sync.Mutex
+var removeLock sync.Mutex
 
 func RemoveFromSlice(slice []int, target int) []int {
-	lock.Lock()
+	removeLock.Lock()
 	j := 0
 	for _, v := range slice {
 		if !(v == target) {
@@ -38,8 +39,15 @@ func RemoveFromSlice(slice []int, target int) []int {
 			j++
 		}
 	}
-	lock.Unlock()
+	removeLock.Unlock()
 	return slice[:j]
+}
+
+func Append(slice []int, val int) []int {
+	appendLock.Lock()
+	slice = append(slice, val)
+	appendLock.Unlock()
+	return slice
 }
 
 func IfExistInSlice(slice []int, target int) bool {
