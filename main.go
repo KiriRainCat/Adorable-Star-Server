@@ -28,7 +28,7 @@ func main() {
 	r := server.Group("/api")
 	r.Use(func(ctx *gin.Context) {
 		if ctx.Request.Method == "OPTIONS" {
-			ctx.AbortWithStatus(http.StatusNoContent)
+			ctx.JSON(http.StatusNoContent, "OPTIONS PASS")
 		}
 	}).
 		Use(gin.LoggerWithWriter(os.Stdout, "/api/ping")).
