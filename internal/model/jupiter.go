@@ -297,6 +297,15 @@ func (o *Assignment) AfterCreate(tx *gorm.DB) error {
 		return nil
 	}
 
+	// If there's a score indicating completion, set status to 1
+	if matched, _ := regexp.MatchString(`\d+ / \d+`, o.Score); matched ||
+		strings.Contains(o.Score, "%") ||
+		strings.Contains(strings.ToLower(o.Score), "ok") ||
+		strings.Contains(strings.ToLower(o.Score), "excused") ||
+		strings.Contains(strings.ToLower(o.Score), "complete") {
+		tx.Model(&o).UpdateColumn("status", 1)
+	}
+
 	// Insert new message to database
 	due := "Future"
 	if o.Due.Year() != 1 {
