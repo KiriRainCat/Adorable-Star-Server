@@ -25,13 +25,15 @@ func main() {
 	// Create gin-engine and base router-group
 	gin.Default()
 	server := gin.New()
-	r := server.Group("/api")
-	r.Use(func(ctx *gin.Context) {
+	server.Use(func(ctx *gin.Context) {
 		if ctx.Request.Method == "OPTIONS" {
 			ctx.JSON(http.StatusOK, "OPTIONS PASS")
 		}
-	}).
-		Use(gin.LoggerWithWriter(os.Stdout, "/api/ping")).
+		ctx.Next()
+	})
+
+	r := server.Group("/api")
+	r.Use(gin.LoggerWithWriter(os.Stdout, "/api/ping")).
 		Use(gin.Recovery()).
 		Use(authMiddleware.Authenticate).
 		Use(authMiddleware.AuthenticateUser)
