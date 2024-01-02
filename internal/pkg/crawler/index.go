@@ -122,11 +122,13 @@ func SwitchBrowser(id int) {
 
 func GetGptAccessToken() {
 	if GptPage == nil {
-		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
+		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito())
+		GptPage.Navigate("http://100.64.0.2:4002")
 	} else {
 		GptPage.Close()
 		time.Sleep(time.Millisecond * 250)
-		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito()).MustNavigate("http://100.64.0.2:4002")
+		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito())
+		GptPage.Navigate("http://100.64.0.2:4002")
 	}
 
 	go GptPage.HijackRequests().MustAdd("*/session", func(ctx *rod.Hijack) {
