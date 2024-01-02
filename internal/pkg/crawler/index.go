@@ -20,7 +20,7 @@ import (
 )
 
 var d = dao.Jupiter
-var browser *rod.Browser
+var browserIdx = 1
 var browserWithProxy *rod.Browser
 var browserWithoutProxy *rod.Browser
 var pagePool rod.PagePool
@@ -59,13 +59,13 @@ func Init() {
 	// Create a page for Pandora Next(GPT)
 	go GetGptAccessToken()
 
-	// Set browser
-	browser = browserWithProxy
-
 	// Create page pool for multithreading
 	pagePool = rod.NewPagePool(config.Config.Crawler.MaxParallel)
 	pageCreate = func() *rod.Page {
-		return stealth.MustPage(browser.MustIncognito())
+		if browserIdx == 1 {
+			return stealth.MustPage(browserWithProxy.MustIncognito())
+		}
+		return stealth.MustPage(browserWithoutProxy.MustIncognito())
 	}
 
 	// Immediately start one crawler job
@@ -110,14 +110,10 @@ func Init() {
 }
 
 func SwitchBrowser(id int) {
-	switch id {
-	case 0:
-		browser = browserWithProxy
-	case 1:
-		browser = browserWithoutProxy
-	default:
-		browser = browserWithProxy
+	if id < 0 || id > 1 {
+		return
 	}
+	browserIdx = id
 }
 
 func GetGptAccessToken() {
@@ -249,7 +245,11 @@ func CrawlerJob(uid ...int) {
 func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 	// Whether using page pool
 	if len(notPool) > 0 && notPool[0] {
-		page = stealth.MustPage(browser).MustSetCookies()
+		if browserIdx == 1 {
+			page = stealth.MustPage(browserWithProxy.MustIncognito())
+		} else {
+			page = stealth.MustPage(browserWithoutProxy.MustIncognito())
+		}
 	} else {
 		time.Sleep(time.Minute / 2 * time.Duration(rand.Float32()))
 		PendingTaskCount++
@@ -281,7 +281,7 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 			// Switch to browser without proxy
 			page.MustClose()
 			PagePoolLoad--
-			browser = browserWithoutProxy
+			browserIdx = 0
 			return OpenJupiterPage(uid)
 		}
 
