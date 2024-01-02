@@ -69,7 +69,7 @@ func Init() {
 	}
 
 	// Immediately start one crawler job
-	{
+	func() {
 		users, err := dao.User.GetActiveUsers()
 		if err != nil {
 			return
@@ -84,7 +84,7 @@ func Init() {
 
 		CrawlerJob(ids...)
 		CrawlerJob()
-	}
+	}()
 
 	// Start scheduled crawler job
 	t2 := time.NewTicker(time.Minute * time.Duration(config.Config.Crawler.FetchInterval-5))
@@ -177,15 +177,14 @@ func CrawlerJob(uid ...int) {
 		return
 	} else if len(uid) > 0 {
 		for _, id := range uid {
-			idC := id
 			func() {
 				// Rate limiter
-				if util.IfExistInSlice(FetchDataRateLimiter, idC) {
+				if util.IfExistInSlice(FetchDataRateLimiter, id) {
 					return
 				}
-				FetchDataRateLimiter = util.Append(FetchDataRateLimiter, idC)
+				FetchDataRateLimiter = util.Append(FetchDataRateLimiter, id)
 				defer func() {
-					FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, idC)
+					FetchDataRateLimiter = util.RemoveFromSlice(FetchDataRateLimiter, id)
 				}()
 
 				// Start job for single user
