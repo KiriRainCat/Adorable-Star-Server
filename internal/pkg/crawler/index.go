@@ -20,7 +20,7 @@ import (
 )
 
 var d = dao.Jupiter
-var browserIdx = 1
+var browserIdx = 1 // 0: without proxy, 1: with proxy
 var browserWithProxy *rod.Browser
 var browserWithoutProxy *rod.Browser
 var pagePool rod.PagePool
