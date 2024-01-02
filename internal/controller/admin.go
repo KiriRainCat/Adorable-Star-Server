@@ -76,12 +76,17 @@ func (c *AdminController) GetDbLog(ctx *gin.Context) {
 }
 
 func (c *AdminController) GetCrawlerLoad(ctx *gin.Context) {
+	str := ""
+	for _, val := range crawler.FetchDataRateLimiter {
+		str += strconv.Itoa(val) + ", "
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"msg":  "success",
 		"data": strconv.Itoa(crawler.PagePoolLoad) + " / " +
 			strconv.Itoa(config.Config.Crawler.MaxParallel) + "|" +
-			strconv.Itoa(crawler.PendingTaskCount),
+			strconv.Itoa(crawler.PendingTaskCount) + "\n" + str,
 	})
 }
 
