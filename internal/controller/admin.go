@@ -86,7 +86,7 @@ func (c *AdminController) GetCrawlerLoad(ctx *gin.Context) {
 		"msg":  "success",
 		"data": strconv.Itoa(crawler.PagePoolLoad) + " / " +
 			strconv.Itoa(config.Config.Crawler.MaxParallel) + "|" +
-			strconv.Itoa(crawler.PendingTaskCount) + "\n" + str,
+			strconv.Itoa(crawler.PendingTaskCount) + "|[" + str + "]",
 	})
 }
 
