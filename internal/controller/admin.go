@@ -90,6 +90,10 @@ func (c *AdminController) GetCrawlerLoad(ctx *gin.Context) {
 	})
 }
 
+func (c *AdminController) ResetCrawlerRateLimiter(ctx *gin.Context) {
+	crawler.FetchDataRateLimiter = []int{}
+}
+
 func (c *AdminController) GetUsers(ctx *gin.Context) {
 	users, err := dao.User.GetUsers()
 	if err != nil {
