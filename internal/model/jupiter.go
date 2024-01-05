@@ -197,6 +197,10 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 				err := tx.Find(&assignments, "title = ? AND due = ? AND \"from\" = ?", o.Title, o.Due, o.From).Error
 				if err == nil {
 					for _, a := range assignments {
+						if a.UID == o.UID {
+							continue
+						}
+
 						tx.Model(&a).UpdateColumn("desc", o.Desc)
 
 						// Insert new message to database
@@ -256,6 +260,10 @@ func (o *Assignment) BeforeUpdate(tx *gorm.DB) error {
 				err := tx.Find(&assignments, "title = ? AND due = ? AND \"from\" = ?", o.Title, o.Due, o.From).Error
 				if err == nil {
 					for _, a := range assignments {
+						if a.UID == o.UID {
+							continue
+						}
+
 						tx.Model(&a).UpdateColumns(Assignment{TurnInAble: o.TurnInAble, TurnInTypes: o.TurnInTypes})
 
 						// Insert new message to database
