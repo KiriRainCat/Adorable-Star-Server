@@ -6,7 +6,6 @@ import (
 	"adorable-star/internal/pkg/util"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
@@ -36,10 +35,7 @@ func InitDB() {
 	// Open database connection with PostgreSQL
 	writer, _ := util.GetFileWriter("log/db.log")
 	DB, _ = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{SingularTable: true},
-		NowFunc: func() time.Time {
-			return time.Now().Local()
-		},
+		NamingStrategy:         schema.NamingStrategy{SingularTable: true},
 		SkipDefaultTransaction: true,
 		DisableAutomaticPing:   true,
 		Logger: logger.New(log.New(writer, "\n", log.LstdFlags), logger.Config{
