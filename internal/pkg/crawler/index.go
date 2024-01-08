@@ -499,7 +499,6 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 					assignment.CopyFromOther(storedAssignment, false)
 				}
 
-				println(reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList))
 				// When both courses are completely equivalent
 				if storedAssignment.Desc == assignment.Desc &&
 					storedAssignment.Score == assignment.Score &&
