@@ -48,5 +48,6 @@ type SMTP struct {
 }
 
 type GPT struct {
+	Enable   bool   `mapstructure:"enable" json:"enable,omitempty" yaml:"enable"`
 	Username string `mapstructure:"username" json:"username,omitempty" yaml:"username"`
 }

@@ -57,7 +57,9 @@ func Init() {
 		MustConnect()
 
 	// Create a page for Pandora Next(GPT)
-	go GetGptAccessToken()
+	if config.Config.GPT.Enable {
+		go GetGptAccessToken()
+	}
 
 	// Set browser
 	browser = browserWithProxy
@@ -463,7 +465,6 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	d.UpdateFetchTimeAndGPA(uid, gpa)
 }
 
-// Store all fetched assignments data to database
 func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment, isSingle ...bool) int {
 	var count = 0
 	wg := &sync.WaitGroup{}
