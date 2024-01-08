@@ -66,7 +66,7 @@ func (o *Course) CopyFromOther(other *Course) {
 }
 
 // Copy all fields from [other] to this assignment for EMPTY fields
-func (o *Assignment) CopyFromOther(other *Assignment) {
+func (o *Assignment) CopyFromOther(other *Assignment, forceTurnInnedArrEmpty bool) {
 	if o.ID == 0 {
 		o.ID = other.ID
 	}
@@ -97,7 +97,7 @@ func (o *Assignment) CopyFromOther(other *Assignment) {
 	if len(o.TurnInTypes) == 0 {
 		o.TurnInTypes = other.TurnInTypes
 	}
-	if len(o.TurnInnedList) == 0 {
+	if len(o.TurnInnedList) == 0 && !forceTurnInnedArrEmpty { //TODO: 到时候换成 len 1 是空，记得优化，不然现在这个补丁修bug方式太草了
 		o.TurnInnedList = other.TurnInnedList
 	}
 	if o.Feedback == "" {

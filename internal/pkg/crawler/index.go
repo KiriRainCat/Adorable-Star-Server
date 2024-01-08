@@ -9,6 +9,7 @@ import (
 	"errors"
 	"math/rand"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -465,7 +466,12 @@ func StoreData(uid int, gpa string, courseList []*model.Course, assignmentsList 
 	d.UpdateFetchTimeAndGPA(uid, gpa)
 }
 
-func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment, isSingle ...bool) int {
+/*
+conds[0] states isSingle for only one assignment being passed.
+
+conds[1] states forceTurnInnedArrEmpty for copying method.
+*/
+func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assignment, conds ...bool) int {
 	var count = 0
 	wg := &sync.WaitGroup{}
 
@@ -487,10 +493,20 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 			// Use update instead of create new assignment when found same assignment
 			if storedAssignment.Title == assignment.Title && storedAssignment.Due.YearDay() == assignment.Due.YearDay() {
 				old = storedAssignment
-				assignment.CopyFromOther(storedAssignment)
+				if len(conds) > 1 && conds[1] {
+					assignment.CopyFromOther(storedAssignment, true)
+				} else {
+					assignment.CopyFromOther(storedAssignment, false)
+				}
 
+				println(reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList))
 				// When both courses are completely equivalent
-				if storedAssignment.Desc == assignment.Desc && storedAssignment.Score == assignment.Score && storedAssignment.Status == assignment.Status && storedAssignment.Feedback == assignment.Feedback && storedAssignment.TurnInAble == assignment.TurnInAble && reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList) {
+				if storedAssignment.Desc == assignment.Desc &&
+					storedAssignment.Score == assignment.Score &&
+					storedAssignment.Status == assignment.Status &&
+					storedAssignment.Feedback == assignment.Feedback &&
+					storedAssignment.TurnInAble == assignment.TurnInAble &&
+					reflect.DeepEqual(storedAssignment.TurnInnedList, assignment.TurnInnedList) {
 					same = true
 				}
 				storedAssignments[idx] = nil
@@ -521,7 +537,7 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 	}
 
 	// Delete nonexisting assignments from database
-	if len(isSingle) == 0 {
+	if len(conds) == 0 {
 		for _, assignment := range storedAssignments {
 			if assignment != nil {
 				count++
@@ -835,6 +851,11 @@ func UnSubmit(uid int, id int, name string) error {
 		return err
 	}
 
+	// Remove files from `Not Turned In` section
+	elList = slices.DeleteFunc(elList, func(el *rod.Element) bool {
+		return strings.Contains(el.MustHTML(), "mb</td>")
+	})
+
 	var target *rod.Element
 	for _, el := range elList {
 		if el.MustElement("td:nth-child(2)").MustText() == name {
@@ -854,7 +875,7 @@ func UnSubmit(uid int, id int, name string) error {
 		page.Timeout(time.Millisecond * 200).MustElement("#deletebtn").MustClick()
 
 		page.WaitStable(time.Millisecond * 100)
-		page.Timeout(time.Millisecond * 200).MustElement("#promptdelete > div > div > div[script*='deletefile']").MustClick()
+		page.Timeout(time.Millisecond*100).MustElementR("#promptdelete > div > div > div.btn", "/^Unsubmit/").MustClick()
 	})
 	if err != nil {
 		return err
@@ -912,7 +933,7 @@ func UnSubmit(uid int, id int, name string) error {
 
 	// Update turn inned list
 	assignment.TurnInnedList = GetTurnInnedList(page)
-	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment}, true)
+	StoreAssignmentsData(uid, assignment.From, []*model.Assignment{assignment}, true, true)
 
 	return nil
 }
