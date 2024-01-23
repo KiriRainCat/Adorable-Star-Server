@@ -14,6 +14,8 @@ func DataRoutes(r *gin.RouterGroup) {
 	c := controller.Data
 
 	// Routes
+	g.GET("/all", c.All)
+
 	g.POST("/fetch", middleware.Auth.AuthenticateUserLevel(1, 1), c.FetchData)
 	g.POST("/fetch-desc/:id", c.FetchAssignmentDetail)
 

@@ -46,6 +46,24 @@ func (s *DataService) GetData(uid int) (data *model.JupiterData, err error) {
 	return
 }
 
+func (s *DataService) GetCoursesWithAssignments(uid int) (courses []*response.Course, err error) {
+	rawCourses, err := s.d.GetCoursesByUID(uid)
+
+	for _, rawCourse := range rawCourses {
+		assignments, err := s.d.GetAssignmentsByCourseAndUID(uid, rawCourse.Title)
+		if err != nil {
+			return nil, err
+		}
+
+		courses = append(courses, &response.Course{
+			Course:      *rawCourse,
+			Assignments: assignments,
+		})
+	}
+
+	return
+}
+
 func (s *DataService) GetCourses(uid int) (courses []*model.Course, err error) {
 	courses, err = s.d.GetCoursesByUID(uid)
 	return

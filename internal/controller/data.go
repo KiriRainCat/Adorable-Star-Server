@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"adorable-star/internal/model"
 	"adorable-star/internal/pkg/crawler"
 	"adorable-star/internal/pkg/response"
 	"adorable-star/internal/pkg/util"
@@ -20,6 +21,46 @@ var UploadRateLimiter = []int{}
 
 type DataController struct {
 	s *service.DataService
+}
+
+func (c *DataController) All(ctx *gin.Context) {
+	uid := ctx.GetInt("uid")
+
+	courses, err := c.s.GetCoursesWithAssignments(uid)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	messages, err := c.s.GetMessages(uid)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "success",
+		"data": response.Data{
+			FetchedAt: ctx.GetTime("fetchedAt"),
+			GPA:       ctx.GetString("gpa"),
+			Data: struct {
+				Messages []*model.Message   `json:"messages,omitempty"`
+				Courses  []*response.Course `json:"courses,omitempty"`
+			}{
+				Messages: messages,
+				Courses:  courses,
+			},
+		},
+	})
 }
 
 func (c *DataController) FetchData(ctx *gin.Context) {
