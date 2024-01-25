@@ -44,6 +44,7 @@ type Assignment struct {
 	CreatedAt     time.Time  `json:"created_at,omitempty"`
 	DescFetchedAt time.Time  `json:"desc_fetched_at,omitempty"`
 	Feedback      string     `json:"feedback,omitempty"`
+	Quarter       int        `json:"quarter,omitempty"`
 }
 
 // Copy all fields from [other] to this course for EMPTY fields

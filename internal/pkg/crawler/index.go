@@ -540,7 +540,10 @@ func StoreAssignmentsData(uid int, courseTitle string, assignments []*model.Assi
 		for _, assignment := range storedAssignments {
 			if assignment != nil {
 				count++
-				d.DeleteAssignment(assignment.ID)
+				// Only allow deletion when the new data is retrieved in the same quarter
+				if assignment.Quarter == assignments[0].Quarter {
+					d.DeleteAssignment(assignment.ID)
+				}
 			}
 		}
 	}

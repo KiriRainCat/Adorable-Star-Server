@@ -73,9 +73,18 @@ func GetCourseAssignments(page *rod.Page, courseName string, uid int) (assignmen
 		return
 	}
 
+	// Store quarter info
+	var quarter int
+	rod.Try(func() {
+		quarter, err = strconv.Atoi(string(page.MustElement("#termmenu_label").MustText()[0:1]))
+		if err != nil {
+			quarter = 0
+		}
+	})
+
 	// Get information about each assignment
 	for idx, el := range data {
-		assignment := &model.Assignment{UID: uid, From: courseName}
+		assignment := &model.Assignment{UID: uid, From: courseName, Quarter: quarter}
 
 		err := rod.Try(func() {
 			due, _ := time.Parse("2006-01-02", FormatJupiterDueDate(el.Timeout(time.Second*2).MustElement("td:nth-child(2)").MustText()))
