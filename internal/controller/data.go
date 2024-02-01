@@ -26,7 +26,7 @@ type DataController struct {
 func (c *DataController) All(ctx *gin.Context) {
 	uid := ctx.GetInt("uid")
 
-	courses, err := c.s.GetCoursesWithAssignments(uid)
+	messages, err := c.s.GetMessages(uid)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
@@ -36,7 +36,17 @@ func (c *DataController) All(ctx *gin.Context) {
 		return
 	}
 
-	messages, err := c.s.GetMessages(uid)
+	courses, err := c.s.GetCourses(uid)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "服务器内部发生错误，请联系开发者",
+			"data": nil,
+		})
+		return
+	}
+
+	assignments, err := c.s.GetAssignments(uid)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code": http.StatusInternalServerError,
@@ -53,11 +63,13 @@ func (c *DataController) All(ctx *gin.Context) {
 			FetchedAt: ctx.GetTime("fetchedAt"),
 			GPA:       ctx.GetString("gpa"),
 			Data: struct {
-				Messages []*model.Message   `json:"messages,omitempty"`
-				Courses  []*response.Course `json:"courses,omitempty"`
+				Messages    []*model.Message    `json:"messages,omitempty"`
+				Courses     []*model.Course     `json:"courses,omitempty"`
+				Assignments []*model.Assignment `json:"assignments,omitempty"`
 			}{
-				Messages: messages,
-				Courses:  courses,
+				Messages:    messages,
+				Courses:     courses,
+				Assignments: assignments,
 			},
 		},
 	})
