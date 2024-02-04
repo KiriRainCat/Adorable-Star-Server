@@ -61,7 +61,7 @@ func (s *GptService) Conversation(stream chan string, convId string, msgs []map[
 		const res = await fetch('/backend-api/conversation', {
 			method: 'POST',
 			headers: {
-				'X-Authorization': token,
+				'Authorization': token,
 				'Content-Type': 'application/json',
 			},
 			body: data,

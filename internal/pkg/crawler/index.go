@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/input"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/stealth"
 )
@@ -125,13 +126,13 @@ func SwitchBrowser(id int) {
 
 func GetGptAccessToken() {
 	if GptPage == nil {
-		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito())
-		GptPage.Navigate("http://100.64.0.2:4002")
+		GptPage = browserWithoutProxy.MustIncognito().MustPage()
+		GptPage.Navigate(config.Config.GPT.URL)
 	} else {
 		GptPage.Close()
 		time.Sleep(time.Millisecond * 250)
-		GptPage = stealth.MustPage(browserWithoutProxy.MustIncognito())
-		GptPage.Navigate("http://100.64.0.2:4002")
+		GptPage = browserWithoutProxy.MustIncognito().MustPage()
+		GptPage.Navigate(config.Config.GPT.URL)
 	}
 
 	go GptPage.HijackRequests().MustAdd("*/session", func(ctx *rod.Hijack) {
@@ -141,15 +142,23 @@ func GetGptAccessToken() {
 		GptAccessToken = "Bearer " + res["accessToken"]
 	}).Run()
 
-	GptPage.MustWaitLoad()
+	for i := 0; i < 3; i++ {
+		GptPage.MustWaitLoad()
 
-	rod.Try(func() {
-		GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
-		GptPage.Timeout(time.Second).MustElement("button[type*='submit']").MustClick()
-	})
+		rod.Try(func() {
+			GptPage.Timeout(time.Second).MustElement("#username").Input(config.Config.GPT.Username)
+			GptPage.Timeout(time.Second).MustElement("#password").Input(config.Config.GPT.Password)
+		})
 
-	if GptPage.Timeout(time.Second*30).WaitElementsMoreThan("img[alt*='User']", 0) != nil {
-		util.Log("crawler", "INFO Pandora Next GPT Err")
+		time.Sleep(time.Second * 2)
+		GptPage.Keyboard.Type(input.Key(13))
+
+		if GptPage.Timeout(time.Second*30).WaitElementsMoreThan("img[alt*='User']", 0) == nil {
+			break
+		}
+
+		GptPage.MustReload()
+		util.Log("crawler", "INFO GPT Proxy Err")
 	}
 }
 

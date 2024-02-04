@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"adorable-star/internal/pkg/config"
 	"adorable-star/internal/pkg/crawler"
 	"adorable-star/internal/service"
 	"io"
@@ -18,6 +19,14 @@ type GptController struct {
 }
 
 func (c *GptController) Conversation(ctx *gin.Context) {
+	if !config.Config.GPT.Enable {
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{
+			"code": http.StatusServiceUnavailable,
+			"msg":  "GPT服务未启用",
+		})
+		return
+	}
+
 	type json struct {
 		ConversationId string              `json:"conversation_id,omitempty"`
 		Messages       []map[string]string `json:"messages" binding:"required"`

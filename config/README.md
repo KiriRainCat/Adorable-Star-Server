@@ -41,6 +41,8 @@ smtp: # SMTP 邮件服务设置
   mail: "name@host.com" # 邮箱
 
 gpt: # GPT 设置 (使用 Session Token 登录)
+  url: "https://www.openai.com" # GPT代理站链接
   enable: false # 是否启用
   username: "name" # 用户名
+  password: "pwd" # 密码
 ```
