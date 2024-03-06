@@ -283,11 +283,14 @@ func OpenJupiterPage(uid int, notPool ...bool) (page *rod.Page, err error) {
 		err = page.Navigate("https://login.jupitered.com/login/")
 		if err != nil {
 			// Notify developer
-			dao.Message.Insert(&model.Message{
-				UID:  1,
-				Type: -1,
-				Msg:  "browserProxyErr",
-			})
+			messages, _ := dao.Message.GetListByUID(1)
+			if !slices.ContainsFunc(messages, func(msg *model.Message) bool { return msg.Msg == "browserProxyErr" }) {
+				dao.Message.Insert(&model.Message{
+					UID:  1,
+					Type: -1,
+					Msg:  "browserProxyErr",
+				})
+			}
 
 			// Switch to browser without proxy
 			PagePoolLoad--
